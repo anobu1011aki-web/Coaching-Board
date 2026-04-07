@@ -47,6 +47,10 @@
     .animating-piece {
       transition: transform 1.2s ease-in-out;
     }
+    /* DFライン用のトランジション（線の端点も滑らかに動かす） */
+    .animating-line {
+      transition: x1 1.2s ease-in-out, y1 1.2s ease-in-out, x2 1.2s ease-in-out, y2 1.2s ease-in-out;
+    }
   </style>
 </head>
 <body class="bg-gray-100 h-screen w-screen overflow-hidden flex flex-col font-sans text-gray-800 touch-none select-none">
@@ -59,6 +63,7 @@
       <div class="flex flex-wrap justify-center items-center gap-1 w-full sm:w-auto">
         <button id="add-a-btn" class="px-2 py-1 bg-red-100 text-red-700 rounded text-xs font-semibold shadow-sm border border-red-200">+ 赤</button>
         <button id="add-b-btn" class="px-2 py-1 bg-blue-100 text-blue-700 rounded text-xs font-semibold shadow-sm border border-blue-200">+ 青</button>
+        <button id="add-df-line-btn" class="px-2 py-1 bg-indigo-100 text-indigo-700 rounded text-xs font-semibold shadow-sm border border-indigo-200">+ DFﾗｲﾝ</button>
         <button id="add-cone-btn" class="px-2 py-1 bg-orange-100 text-orange-700 rounded text-xs font-semibold shadow-sm border border-orange-200">+ ｺｰﾝ</button>
         <button id="add-marker-btn" class="px-2 py-1 bg-yellow-100 text-yellow-700 rounded text-xs font-semibold shadow-sm border border-yellow-300">+ ﾏｰｶｰ</button>
         <button id="reset-btn" class="px-2 py-1 bg-gray-100 text-gray-700 rounded text-xs font-semibold shadow-sm border border-gray-300 ml-1">初期化</button>
@@ -94,7 +99,7 @@
       </select>
     </div>
 
-    <!-- 🌟 アニメーションコントロールパネル (画面下部にフローティング) -->
+    <!-- 🌟 アニメーションコントロールパネル -->
     <div class="absolute bottom-2 sm:bottom-4 left-1/2 transform -translate-x-1/2 z-10 bg-white/95 p-1.5 sm:p-2 rounded-xl shadow-lg backdrop-blur border border-gray-200 flex items-center gap-1.5 sm:gap-2">
       <span class="text-[10px] sm:text-xs font-bold text-gray-500 ml-1 hidden sm:inline">アニメ:</span>
       <button id="record-scene-btn" class="px-3 py-2 bg-red-100 hover:bg-red-200 text-red-700 rounded-lg text-xs font-bold shadow-sm transition-colors flex items-center gap-1 border border-red-200">
@@ -112,7 +117,6 @@
     <!-- SVGキャンバス -->
     <svg id="board" viewBox="-40 -40 880 480" class="w-full h-full max-h-full object-contain block transition-all duration-500 touch-none">
       <defs>
-        <!-- コートからはみ出した線を切るためのクリップパス -->
         <clipPath id="court-clip">
           <rect x="0" y="0" width="800" height="400" />
         </clipPath>
@@ -165,6 +169,8 @@
         <rect x="800" y="170" width="20" height="60" fill="url(#goalPattern)" stroke="white" stroke-width="2" />
       </g>
 
+      <!-- 🌟 DFライン（結ぶ線）が描画されるレイヤー -->
+      <g id="df-lines-layer"></g>
       <!-- 手書きペン（矢印）が描画されるレイヤー -->
       <g id="draw-layer"></g>
       <!-- 選手（駒）やアイテムが配置されるレイヤー -->
@@ -188,6 +194,7 @@
     document.addEventListener('DOMContentLoaded', () => {
       const svg = document.getElementById('board');
       const playersLayer = document.getElementById('players-layer');
+      const dfLinesLayer = document.getElementById('df-lines-layer');
       const drawLayer = document.getElementById('draw-layer');
       const instructionText = document.getElementById('instruction-text');
       
@@ -304,7 +311,7 @@
       window.addEventListener('touchend', endDraw);
 
       // ==========================================
-      // アイテム（駒・コーン・マーカー）の管理
+      // アイテム（駒・コーン・マーカー・DFライン）の管理
       // ==========================================
       let players = [];
       let draggingElement = null;
@@ -325,7 +332,49 @@
         { id: 'ball', team: 'ball', label: '⚽', x: 400, y: 200 }
       ];
 
-      // 🌟 アニメーション用のDOM再利用ロジックを含む描画関数
+      // 🌟 DFラインを描画・更新する関数
+      function updateDfLines() {
+        const dfGroups = {};
+        
+        // DFラインの端点ノードをグループごとにまとめる
+        players.forEach(p => {
+          if (p.team === 'df-node') {
+            if (!dfGroups[p.groupId]) dfGroups[p.groupId] = [];
+            dfGroups[p.groupId].push(p);
+          }
+        });
+
+        // 削除された線をDOMから消す
+        const currentLineIds = new Set(Object.keys(dfGroups));
+        Array.from(dfLinesLayer.children).forEach(child => {
+          if (!currentLineIds.has(child.dataset.id)) {
+            child.remove();
+          }
+        });
+
+        // 線の生成と座標更新
+        Object.keys(dfGroups).forEach(groupId => {
+          const nodes = dfGroups[groupId];
+          if (nodes.length === 2) {
+            let line = dfLinesLayer.querySelector(`line[data-id="${groupId}"]`);
+            if (!line) {
+              line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+              line.dataset.id = groupId;
+              line.setAttribute('stroke', 'rgba(59, 130, 246, 0.4)'); // DFカラー(青)の半透明
+              line.setAttribute('stroke-width', '14');
+              line.setAttribute('stroke-linecap', 'round');
+              line.classList.add('df-line-element');
+              dfLinesLayer.appendChild(line);
+            }
+            // 線の座標を端点の位置に合わせる
+            line.setAttribute('x1', nodes[0].x);
+            line.setAttribute('y1', nodes[0].y);
+            line.setAttribute('x2', nodes[1].x);
+            line.setAttribute('y2', nodes[1].y);
+          }
+        });
+      }
+
       function renderPlayers() {
         // 1. 存在しなくなった駒をDOMから削除
         const currentIds = new Set(players.map(p => p.id));
@@ -339,7 +388,6 @@
         players.forEach(player => {
           let group = playersLayer.querySelector(`g[data-id="${player.id}"]`);
 
-          // グループがまだなければ作成（初回のみ）
           if (!group) {
             group = document.createElementNS('http://www.w3.org/2000/svg', 'g');
             group.setAttribute('class', 'no-select cursor-pointer piece-group');
@@ -362,6 +410,14 @@
               const innerCircle = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
               innerCircle.setAttribute('r', '3'); innerCircle.setAttribute('fill', 'none'); innerCircle.setAttribute('stroke', 'white'); innerCircle.setAttribute('stroke-width', '1.5');
               group.appendChild(innerCircle);
+            } else if (player.team === 'df-node') {
+              // 🌟 DFラインの端点（ポッチ）
+              const hitArea = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+              hitArea.setAttribute('r', '16'); hitArea.setAttribute('fill', 'transparent'); // ドラッグしやすくするための透明な当たり判定
+              group.appendChild(hitArea);
+              const circle = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+              circle.setAttribute('r', '5'); circle.setAttribute('fill', '#3b82f6'); circle.setAttribute('stroke', 'white'); circle.setAttribute('stroke-width', '1.5');
+              group.appendChild(circle);
             } else {
               const isBall = player.team === 'ball';
               const radius = isBall ? 10 : 16;
@@ -385,16 +441,18 @@
             group.addEventListener('touchstart', startPlayerDrag, { passive: false });
             playersLayer.appendChild(group);
           } else {
-            // 既に存在する場合はテキストのみ更新（名前変更対応）
+            // 既に存在する場合はテキストのみ更新
             const textEl = group.querySelector('.player-label');
-            if (textEl && player.team !== 'cone' && player.team !== 'marker') {
+            if (textEl && player.team !== 'cone' && player.team !== 'marker' && player.team !== 'df-node') {
               textEl.textContent = player.label;
             }
           }
 
-          // 🌟 スーッと動かすために、属性ではなくCSSの style.transform を使用する
           group.style.transform = `translate(${player.x}px, ${player.y}px)`;
         });
+
+        // 線の描画を更新
+        updateDfLines();
       }
 
       function startPlayerDrag(evt) {
@@ -427,8 +485,12 @@
         draggingElement.player.x = newX;
         draggingElement.player.y = newY;
         
-        // 🌟 ドラッグ時も style.transform を使用
         draggingElement.group.style.transform = `translate(${newX}px, ${newY}px)`;
+
+        // ドラッグ中も線を追従させる
+        if (draggingElement.player.team === 'df-node') {
+          updateDfLines();
+        }
       }
 
       function endPlayerDrag(evt) {
@@ -443,8 +505,14 @@
           return;
         }
 
+        // 枠外にドロップされた場合（ボール以外は削除）
         if (player.team !== 'ball' && (player.x < -30 || player.x > 830 || player.y < -30 || player.y > 430)) {
-          players = players.filter(p => p.id !== id);
+          if (player.team === 'df-node') {
+            // DFラインの片方を捨てたら、ペアになっているもう片方も削除する
+            players = players.filter(p => p.groupId !== player.groupId);
+          } else {
+            players = players.filter(p => p.id !== id);
+          }
           renderPlayers();
         }
       }
@@ -464,26 +532,21 @@
       const btnPlay = document.getElementById('play-anim-btn');
       const btnClearAnim = document.getElementById('clear-anim-btn');
 
-      // 1. シーンの記録
       btnRecord.addEventListener('click', () => {
         if (isPlayingAnim) return;
-        // 現在の駒の配置をディープコピーして保存
         scenes.push(JSON.parse(JSON.stringify(players)));
         sceneCountEl.textContent = scenes.length;
         
-        // 押したフィードバック
         btnRecord.classList.add('bg-red-200');
         setTimeout(() => btnRecord.classList.remove('bg-red-200'), 200);
       });
 
-      // 2. アニメーションのリセット
       btnClearAnim.addEventListener('click', () => {
         if (isPlayingAnim) return;
         scenes = [];
         sceneCountEl.textContent = '0';
       });
 
-      // 3. アニメーションの再生
       btnPlay.addEventListener('click', async () => {
         if (isPlayingAnim) return;
         if (scenes.length < 2) {
@@ -496,30 +559,35 @@
         btnPlay.classList.add('opacity-50', 'cursor-not-allowed');
 
         const allGroups = document.querySelectorAll('.piece-group');
+        const allLines = document.querySelectorAll('.df-line-element');
 
         // まずシーン1へ「一瞬で」戻る（トランジションを外す）
         allGroups.forEach(g => g.classList.remove('animating-piece'));
+        allLines.forEach(l => l.classList.remove('animating-line'));
+        
         players = JSON.parse(JSON.stringify(scenes[0]));
         renderPlayers();
         
-        // ★重要：ブラウザの描画を強制し、初期位置を確定させる（これがないと瞬間移動になる）
         void document.body.offsetHeight;
         await new Promise(resolve => requestAnimationFrame(resolve));
 
         // トランジション（アニメーションCSS）を付与
         const activeGroups = document.querySelectorAll('.piece-group');
         activeGroups.forEach(g => g.classList.add('animating-piece'));
+        const activeLines = document.querySelectorAll('.df-line-element');
+        activeLines.forEach(l => l.classList.add('animating-line'));
 
         // シーン2以降を順番に再生
         for (let i = 1; i < scenes.length; i++) {
           await new Promise(resolve => setTimeout(resolve, 300)); // 動き出す前のタメ
           players = JSON.parse(JSON.stringify(scenes[i]));
-          renderPlayers(); // ここで座標が更新され、CSSにより滑らかに動く
-          await new Promise(resolve => setTimeout(resolve, 1200)); // 移動完了を待つ（1.2秒）
+          renderPlayers(); // コマと線がCSSトランジションにより滑らかに動く
+          await new Promise(resolve => setTimeout(resolve, 1200)); // 移動完了を待つ
         }
 
         // 再生完了後のクリーンアップ
         activeGroups.forEach(g => g.classList.remove('animating-piece'));
+        activeLines.forEach(l => l.classList.remove('animating-line'));
         isPlayingAnim = false;
         btnPlay.innerHTML = '▶ 再生';
         btnPlay.classList.remove('opacity-50', 'cursor-not-allowed');
@@ -541,6 +609,15 @@
       document.getElementById('add-b-btn').addEventListener('click', () => { players.push({ id: `new_${nextId++}`, team: 'B', label: '+', x: 400 + (Math.random() * 40 - 20), y: 200 + (Math.random() * 40 - 20) }); renderPlayers(); });
       document.getElementById('add-cone-btn').addEventListener('click', () => { players.push({ id: `new_${nextId++}`, team: 'cone', label: '', x: 400 + (Math.random() * 40 - 20), y: 200 + (Math.random() * 40 - 20) }); renderPlayers(); });
       document.getElementById('add-marker-btn').addEventListener('click', () => { players.push({ id: `new_${nextId++}`, team: 'marker', label: '', x: 400 + (Math.random() * 40 - 20), y: 200 + (Math.random() * 40 - 20) }); renderPlayers(); });
+      
+      // 🌟 DFラインの追加
+      document.getElementById('add-df-line-btn').addEventListener('click', () => { 
+        const gId = `dfl_${nextId++}`;
+        // 両端のノード（ポッチ）を2つ追加する
+        players.push({ id: `${gId}_1`, team: 'df-node', groupId: gId, label: '', x: 350, y: 200 }); 
+        players.push({ id: `${gId}_2`, team: 'df-node', groupId: gId, label: '', x: 450, y: 200 }); 
+        renderPlayers(); 
+      });
 
       // ==========================================
       // 名前変更モーダルの処理
@@ -550,7 +627,8 @@
       
       function openNameModal(id) {
         const player = players.find(p => p.id === id);
-        if (!player || player.team === 'ball' || player.team === 'cone' || player.team === 'marker') return;
+        // ボール・コーン・マーカー・DFラインは名前変更不可
+        if (!player || player.team === 'ball' || player.team === 'cone' || player.team === 'marker' || player.team === 'df-node') return;
         editingPlayerId = id; nameInput.value = player.label; modal.classList.remove('hidden'); 
         setTimeout(() => { nameInput.focus(); nameInput.select(); }, 50);
       }
