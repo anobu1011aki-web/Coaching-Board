@@ -54,13 +54,25 @@
       padding-right: env(safe-area-inset-right);
       padding-bottom: env(safe-area-inset-bottom);
     }
+
+    /* 🌟 スマホ縦画面・横画面に応じたヘッダーのレイアウト切り替え */
+    @media (orientation: portrait) {
+      .responsive-header {
+        flex-wrap: wrap !important;
+        overflow-x: visible !important;
+        white-space: normal !important;
+      }
+      .separator {
+        display: none !important;
+      }
+    }
   </style>
 </head>
 <body class="bg-gray-100 h-screen w-screen overflow-hidden flex flex-col font-sans text-gray-800 touch-none select-none">
 
-  <!-- 🌟 ヘッダーエリア -->
+  <!-- 🌟 ヘッダーエリア（縦画面時は折り返し、横画面時は1行） -->
   <header class="bg-white shadow-sm z-20 flex-shrink-0 border-b border-gray-200">
-    <div class="px-1 py-1 flex items-center justify-start gap-1 overflow-x-auto hide-scrollbar whitespace-nowrap">
+    <div class="px-1 py-1 flex items-center justify-start gap-1 overflow-x-auto hide-scrollbar whitespace-nowrap responsive-header">
       
       <!-- 表示切り替え -->
       <select id="view-select" class="text-xs bg-gray-100 border border-gray-300 rounded px-1 py-1 font-bold text-gray-700 focus:outline-none cursor-pointer shrink-0">
@@ -68,7 +80,7 @@
         <option value="half">ハーフコート</option>
       </select>
 
-      <div class="w-px h-4 bg-gray-300 mx-0.5 shrink-0"></div>
+      <div class="w-px h-4 bg-gray-300 mx-0.5 shrink-0 separator"></div>
 
       <!-- 駒・アイテムの追加・初期化ボタン -->
       <div class="flex items-center gap-1 shrink-0">
@@ -80,7 +92,7 @@
         <button id="reset-btn" class="px-1.5 py-1 bg-gray-100 text-gray-700 rounded text-xs font-bold shadow-sm border border-gray-300 ml-0.5">初期化</button>
       </div>
 
-      <div class="w-px h-4 bg-gray-300 mx-0.5 shrink-0"></div>
+      <div class="w-px h-4 bg-gray-300 mx-0.5 shrink-0 separator"></div>
 
       <!-- モード切り替え（移動・ペン） -->
       <div class="flex items-center gap-1 bg-gray-50 p-0.5 rounded border border-gray-200 shrink-0">
@@ -97,7 +109,7 @@
         <button id="clear-lines-btn" class="px-1.5 py-1 bg-gray-200 text-gray-700 rounded text-xs font-bold">🗑️</button>
       </div>
 
-      <div class="w-px h-4 bg-gray-300 mx-0.5 shrink-0"></div>
+      <div class="w-px h-4 bg-gray-300 mx-0.5 shrink-0 separator"></div>
 
       <!-- 🎬 アニメーション動画コントロール -->
       <div class="flex items-center gap-1 bg-green-50 p-0.5 rounded border border-green-200 shrink-0 pr-2">
@@ -118,14 +130,12 @@
   <!-- 🌟 作戦ボードエリア -->
   <main class="flex-grow relative w-full bg-[#2b3e50] overflow-hidden flex items-center justify-center" id="svg-container">
     
-    <!-- SVGキャンバス -->
-    <svg id="board" viewBox="-40 -40 880 480" preserveAspectRatio="xMidYMid meet" class="w-full h-full max-h-full object-contain block transition-all duration-500 touch-none drop-shadow-lg">
+    <!-- SVGキャンバス (🌟 viewBox を調整し、コートを最大限に拡大表示) -->
+    <svg id="board" viewBox="-25 -15 850 430" preserveAspectRatio="xMidYMid meet" class="w-full h-full max-h-full object-contain block transition-all duration-500 touch-none drop-shadow-lg">
       <defs>
-        <!-- フルコート用クリップパス -->
         <clipPath id="court-clip-full">
           <rect x="0" y="0" width="800" height="400" />
         </clipPath>
-        <!-- ハーフコート用クリップパス -->
         <clipPath id="court-clip-half">
           <rect x="0" y="0" width="400" height="400" />
         </clipPath>
@@ -150,7 +160,8 @@
 
       <!-- ＝＝＝＝＝ フルコート描画 ＝＝＝＝＝ -->
       <g id="court-full">
-        <rect x="-400" y="-400" width="1600" height="1200" fill="#2b3e50" />
+        <!-- 背景の紺色領域もviewBoxに合わせて最小限に -->
+        <rect x="-100" y="-100" width="1000" height="600" fill="#2b3e50" />
         <rect x="0" y="0" width="800" height="400" fill="url(#courtGrad)" />
 
         <g clip-path="url(#court-clip-full)">
@@ -179,7 +190,8 @@
 
       <!-- ＝＝＝＝＝ ハーフコート（縦向き）描画 ＝＝＝＝＝ -->
       <g id="court-half" style="display: none;">
-        <rect x="-400" y="-400" width="1200" height="1200" fill="#2b3e50" />
+        <!-- 背景の紺色領域もviewBoxに合わせて最小限に -->
+        <rect x="-100" y="-100" width="600" height="600" fill="#2b3e50" />
         <rect x="0" y="0" width="400" height="400" fill="url(#courtGrad)" />
 
         <g clip-path="url(#court-clip-half)">
@@ -313,17 +325,17 @@
         { id: 'ball', team: 'ball', label: '⚽', x: 200, y: 240 }
       ];
 
-      // 🌟 表示モード切り替え処理
+      // 🌟 表示モード切り替え（viewBoxの設定を調整してコートを最大化）
       viewSelect.addEventListener('change', (e) => {
         const val = e.target.value;
         if (val === 'full') {
-          svg.setAttribute('viewBox', '-40 -40 880 480');
+          svg.setAttribute('viewBox', '-25 -15 850 430');
           document.getElementById('court-full').style.display = 'block';
           document.getElementById('court-half').style.display = 'none';
           players = JSON.parse(JSON.stringify(defaultPlayersFull));
         } else if (val === 'half') {
-          // ハーフコート時は少し余裕を持たせて見やすく
-          svg.setAttribute('viewBox', '-60 -60 520 520');
+          // ハーフコート時に画面いっぱいに広がるように数値を絞り込み
+          svg.setAttribute('viewBox', '-15 -25 430 440');
           document.getElementById('court-full').style.display = 'none';
           document.getElementById('court-half').style.display = 'block';
           players = JSON.parse(JSON.stringify(defaultPlayersHalf));
@@ -605,7 +617,7 @@
           renderPlayers();
         }
 
-        // 枠外判定（フルコート用とハーフコート用で共通化できるよう少し広めに判定）
+        // 枠外判定（少し広めに判定）
         if (player.team !== 'ball' && (player.x < -60 || player.x > 860 || player.y < -60 || player.y > 460)) {
           if (player.team === 'df-node') {
             players = players.filter(p => p.groupId !== player.groupId);
