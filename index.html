@@ -58,15 +58,14 @@
 </head>
 <body class="bg-gray-100 h-screen w-screen overflow-hidden flex flex-col font-sans text-gray-800 touch-none select-none">
 
-  <!-- 🌟 ヘッダーエリア（完全1列化・横スクロール・アイコン化） -->
+  <!-- 🌟 ヘッダーエリア -->
   <header class="bg-white shadow-sm z-20 flex-shrink-0 border-b border-gray-200">
     <div class="px-1 py-1 flex items-center justify-start gap-1 overflow-x-auto hide-scrollbar whitespace-nowrap">
       
       <!-- 表示切り替え -->
       <select id="view-select" class="text-xs bg-gray-100 border border-gray-300 rounded px-1 py-1 font-bold text-gray-700 focus:outline-none cursor-pointer shrink-0">
-        <option value="full">フル</option>
-        <option value="half-left">左ハーフ</option>
-        <option value="half-right">右ハーフ</option>
+        <option value="full">フルコート</option>
+        <option value="half">ハーフコート</option>
       </select>
 
       <div class="w-px h-4 bg-gray-300 mx-0.5 shrink-0"></div>
@@ -88,7 +87,6 @@
         <button id="mode-move" class="tool-btn active px-1.5 py-1 bg-white border border-gray-300 rounded text-xs font-bold flex items-center">
           👆
         </button>
-        <!-- 🌟 アイコンだけのペンボタン -->
         <button id="mode-draw-red" class="tool-btn px-1.5 py-1 bg-white border border-gray-300 rounded flex items-center justify-center" title="赤ペン">
           <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#ef4444" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21.174 6.812a1 1 0 0 0-3.986-3.987L3.842 16.174a2 2 0 0 0-.5.83l-1.321 4.352a.5.5 0 0 0 .623.622l4.353-1.32a2 2 0 0 0 .83-.497z"/><path d="m15 5 4 4"/></svg>
         </button>
@@ -120,11 +118,16 @@
   <!-- 🌟 作戦ボードエリア -->
   <main class="flex-grow relative w-full bg-[#2b3e50] overflow-hidden flex items-center justify-center" id="svg-container">
     
-    <!-- SVGキャンバス 🌟 ハーフコートでアスペクト比が崩れないように preserveAspectRatio を追加 -->
+    <!-- SVGキャンバス -->
     <svg id="board" viewBox="-40 -40 880 480" preserveAspectRatio="xMidYMid meet" class="w-full h-full max-h-full object-contain block transition-all duration-500 touch-none drop-shadow-lg">
       <defs>
-        <clipPath id="court-clip">
+        <!-- フルコート用クリップパス -->
+        <clipPath id="court-clip-full">
           <rect x="0" y="0" width="800" height="400" />
+        </clipPath>
+        <!-- ハーフコート用クリップパス -->
+        <clipPath id="court-clip-half">
+          <rect x="0" y="0" width="400" height="400" />
         </clipPath>
 
         <pattern id="goalPattern" width="10" height="10" patternUnits="userSpaceOnUse" patternTransform="rotate(45)">
@@ -145,12 +148,12 @@
         </marker>
       </defs>
 
-      <!-- 背景とラインの描画レイヤー -->
-      <g id="court-layer">
+      <!-- ＝＝＝＝＝ フルコート描画 ＝＝＝＝＝ -->
+      <g id="court-full">
         <rect x="-400" y="-400" width="1600" height="1200" fill="#2b3e50" />
         <rect x="0" y="0" width="800" height="400" fill="url(#courtGrad)" />
 
-        <g clip-path="url(#court-clip)">
+        <g clip-path="url(#court-clip-full)">
           <line x1="400" y1="0" x2="400" y2="400" stroke="white" stroke-width="3" />
           <circle cx="400" cy="200" r="40" fill="none" stroke="white" stroke-width="2" />
 
@@ -170,9 +173,38 @@
         <rect x="0" y="0" width="800" height="400" fill="none" stroke="white" stroke-width="3" />
         <line x1="310" y1="-5" x2="310" y2="5" stroke="white" stroke-width="3" />
         <line x1="490" y1="-5" x2="490" y2="5" stroke="white" stroke-width="3" />
-
         <rect x="-20" y="170" width="20" height="60" fill="url(#goalPattern)" stroke="white" stroke-width="2" />
         <rect x="800" y="170" width="20" height="60" fill="url(#goalPattern)" stroke="white" stroke-width="2" />
+      </g>
+
+      <!-- ＝＝＝＝＝ ハーフコート（縦向き）描画 ＝＝＝＝＝ -->
+      <g id="court-half" style="display: none;">
+        <rect x="-400" y="-400" width="1200" height="1200" fill="#2b3e50" />
+        <rect x="0" y="0" width="400" height="400" fill="url(#courtGrad)" />
+
+        <g clip-path="url(#court-clip-half)">
+          <!-- センターライン（下部） -->
+          <line x1="0" y1="400" x2="400" y2="400" stroke="white" stroke-width="3" />
+          
+          <!-- ゴールエリア (6m) -->
+          <path d="M 50 0 A 120 120 0 0 0 170 120 L 230 120 A 120 120 0 0 0 350 0 Z" fill="#4da6ff" stroke="white" stroke-width="2" />
+          <!-- フリースローライン (9m) -->
+          <path d="M -10 0 A 180 180 0 0 0 170 180 L 230 180 A 180 180 0 0 0 410 0" fill="none" stroke="white" stroke-width="2" stroke-dasharray="10, 10" />
+          <!-- ペナルティライン (7m) -->
+          <line x1="190" y1="140" x2="210" y2="140" stroke="white" stroke-width="2" />
+          <!-- ゴールキーパーライン (4m) -->
+          <line x1="185" y1="80" x2="215" y2="80" stroke="white" stroke-width="2" />
+        </g>
+
+        <!-- 外枠 -->
+        <rect x="0" y="0" width="400" height="400" fill="none" stroke="white" stroke-width="3" />
+        
+        <!-- 交代ライン -->
+        <line x1="-5" y1="310" x2="5" y2="310" stroke="white" stroke-width="3" />
+        <line x1="395" y1="310" x2="405" y2="310" stroke="white" stroke-width="3" />
+        
+        <!-- ゴール -->
+        <rect x="170" y="-20" width="60" height="20" fill="url(#goalPattern)" stroke="white" stroke-width="2" />
       </g>
 
       <!-- DFライン（結ぶ線）が描画されるレイヤー -->
@@ -244,18 +276,64 @@
         renderPlayers();
       });
 
-      // 🌟 ハーフコート切り替えの最適化
+      // ==========================================
+      // 🌟 初期配置データ（フルコート用 / ハーフコート用）
+      // ==========================================
+      const defaultPlayersFull = [
+        { id: 'a1', team: 'A', label: 'GK', x: 20, y: 200 }, { id: 'a2', team: 'A', label: 'LW', x: 130, y: 60 },
+        { id: 'a3', team: 'A', label: 'LB', x: 150, y: 120 }, { id: 'a4', team: 'A', label: 'CB', x: 150, y: 200 },
+        { id: 'a5', team: 'A', label: 'RB', x: 150, y: 280 }, { id: 'a6', team: 'A', label: 'RW', x: 130, y: 340 },
+        { id: 'a7', team: 'A', label: 'PV', x: 130, y: 160 },
+        { id: 'b1', team: 'B', label: 'GK', x: 780, y: 200 }, { id: 'b2', team: 'B', label: 'RW', x: 670, y: 40 },
+        { id: 'b3', team: 'B', label: 'RB', x: 650, y: 100 }, { id: 'b4', team: 'B', label: 'CB', x: 650, y: 200 },
+        { id: 'b5', team: 'B', label: 'LB', x: 650, y: 300 }, { id: 'b6', team: 'B', label: 'LW', x: 670, y: 360 },
+        { id: 'b7', team: 'B', label: 'PV', x: 670, y: 240 },
+        { id: 'ball', team: 'ball', label: '⚽', x: 400, y: 200 }
+      ];
+
+      // ハーフコート時は、上部(ゴール側)が赤(DF)、下部(センター側)が青(OF)
+      const defaultPlayersHalf = [
+        // 守備側（赤）
+        { id: 'a1', team: 'A', label: 'GK', x: 200, y: 20 },
+        { id: 'a2', team: 'A', label: 'LW', x: 70, y: 110 },
+        { id: 'a3', team: 'A', label: 'LB', x: 130, y: 130 },
+        { id: 'a4', team: 'A', label: 'CB', x: 200, y: 140 },
+        { id: 'a5', team: 'A', label: 'RB', x: 270, y: 130 },
+        { id: 'a6', team: 'A', label: 'RW', x: 330, y: 110 },
+        { id: 'a7', team: 'A', label: 'PV', x: 200, y: 110 },
+        // 攻撃側（青）
+        { id: 'b1', team: 'B', label: 'GK', x: 200, y: 380 },
+        { id: 'b2', team: 'B', label: 'LW', x: 40, y: 300 },
+        { id: 'b3', team: 'B', label: 'LB', x: 120, y: 250 },
+        { id: 'b4', team: 'B', label: 'CB', x: 200, y: 270 },
+        { id: 'b5', team: 'B', label: 'RB', x: 280, y: 250 },
+        { id: 'b6', team: 'B', label: 'RW', x: 360, y: 300 },
+        { id: 'b7', team: 'B', label: 'PV', x: 200, y: 160 },
+        // ボール
+        { id: 'ball', team: 'ball', label: '⚽', x: 200, y: 240 }
+      ];
+
+      // 🌟 表示モード切り替え処理
       viewSelect.addEventListener('change', (e) => {
         const val = e.target.value;
         if (val === 'full') {
           svg.setAttribute('viewBox', '-40 -40 880 480');
-        } else if (val === 'half-left') {
-          // 左側だけを画面いっぱいにズーム
-          svg.setAttribute('viewBox', '-30 -10 440 420');
-        } else if (val === 'half-right') {
-          // 右側だけを画面いっぱいにズーム
-          svg.setAttribute('viewBox', '390 -10 440 420');
+          document.getElementById('court-full').style.display = 'block';
+          document.getElementById('court-half').style.display = 'none';
+          players = JSON.parse(JSON.stringify(defaultPlayersFull));
+        } else if (val === 'half') {
+          // ハーフコート時は少し余裕を持たせて見やすく
+          svg.setAttribute('viewBox', '-60 -60 520 520');
+          document.getElementById('court-full').style.display = 'none';
+          document.getElementById('court-half').style.display = 'block';
+          players = JSON.parse(JSON.stringify(defaultPlayersHalf));
         }
+        
+        // 状態のリセット
+        drawLayer.innerHTML = ''; 
+        scenes = []; 
+        document.getElementById('scene-count').textContent = '0';
+        renderPlayers();
       });
 
       function getMousePosition(evt) {
@@ -332,18 +410,6 @@
       let dragStartTime = 0;
       let editingPlayerId = null;
       let nextId = 100;
-
-      const defaultPlayers = [
-        { id: 'a1', team: 'A', label: 'GK', x: 20, y: 200 }, { id: 'a2', team: 'A', label: 'LW', x: 130, y: 60 },
-        { id: 'a3', team: 'A', label: 'LB', x: 150, y: 120 }, { id: 'a4', team: 'A', label: 'CB', x: 150, y: 200 },
-        { id: 'a5', team: 'A', label: 'RB', x: 150, y: 280 }, { id: 'a6', team: 'A', label: 'RW', x: 130, y: 340 },
-        { id: 'a7', team: 'A', label: 'PV', x: 130, y: 160 },
-        { id: 'b1', team: 'B', label: 'GK', x: 780, y: 200 }, { id: 'b2', team: 'B', label: 'RW', x: 670, y: 40 },
-        { id: 'b3', team: 'B', label: 'RB', x: 650, y: 100 }, { id: 'b4', team: 'B', label: 'CB', x: 650, y: 200 },
-        { id: 'b5', team: 'B', label: 'LB', x: 650, y: 300 }, { id: 'b6', team: 'B', label: 'LW', x: 670, y: 360 },
-        { id: 'b7', team: 'B', label: 'PV', x: 670, y: 240 },
-        { id: 'ball', team: 'ball', label: '⚽', x: 400, y: 200 }
-      ];
 
       function updateDfLines() {
         const dfGroups = {};
@@ -539,7 +605,8 @@
           renderPlayers();
         }
 
-        if (player.team !== 'ball' && (player.x < -30 || player.x > 830 || player.y < -30 || player.y > 430)) {
+        // 枠外判定（フルコート用とハーフコート用で共通化できるよう少し広めに判定）
+        if (player.team !== 'ball' && (player.x < -60 || player.x > 860 || player.y < -60 || player.y > 460)) {
           if (player.team === 'df-node') {
             players = players.filter(p => p.groupId !== player.groupId);
           } else {
@@ -640,22 +707,33 @@
       // 追加・初期化ボタンの処理
       // ==========================================
       document.getElementById('reset-btn').addEventListener('click', () => {
-        players = JSON.parse(JSON.stringify(defaultPlayers));
+        const isHalf = document.getElementById('view-select').value === 'half';
+        players = JSON.parse(JSON.stringify(isHalf ? defaultPlayersHalf : defaultPlayersFull));
         drawLayer.innerHTML = ''; 
         scenes = []; 
         sceneCountEl.textContent = '0';
         renderPlayers();
       });
       
-      document.getElementById('add-a-btn').addEventListener('click', () => { players.push({ id: `new_${nextId++}`, team: 'A', label: '+', x: 400 + (Math.random() * 40 - 20), y: 200 + (Math.random() * 40 - 20) }); renderPlayers(); });
-      document.getElementById('add-b-btn').addEventListener('click', () => { players.push({ id: `new_${nextId++}`, team: 'B', label: '+', x: 400 + (Math.random() * 40 - 20), y: 200 + (Math.random() * 40 - 20) }); renderPlayers(); });
-      document.getElementById('add-cone-btn').addEventListener('click', () => { players.push({ id: `new_${nextId++}`, team: 'cone', label: '', x: 400 + (Math.random() * 40 - 20), y: 200 + (Math.random() * 40 - 20) }); renderPlayers(); });
-      document.getElementById('add-marker-btn').addEventListener('click', () => { players.push({ id: `new_${nextId++}`, team: 'marker', label: '', x: 400 + (Math.random() * 40 - 20), y: 200 + (Math.random() * 40 - 20) }); renderPlayers(); });
+      // 新しいコマを追加する位置も、フルコート/ハーフコートで中心座標を変える
+      function getAddPosition() {
+        const isHalf = document.getElementById('view-select').value === 'half';
+        return {
+          x: (isHalf ? 200 : 400) + (Math.random() * 40 - 20),
+          y: (isHalf ? 200 : 200) + (Math.random() * 40 - 20)
+        };
+      }
+
+      document.getElementById('add-a-btn').addEventListener('click', () => { const p = getAddPosition(); players.push({ id: `new_${nextId++}`, team: 'A', label: '+', x: p.x, y: p.y }); renderPlayers(); });
+      document.getElementById('add-b-btn').addEventListener('click', () => { const p = getAddPosition(); players.push({ id: `new_${nextId++}`, team: 'B', label: '+', x: p.x, y: p.y }); renderPlayers(); });
+      document.getElementById('add-cone-btn').addEventListener('click', () => { const p = getAddPosition(); players.push({ id: `new_${nextId++}`, team: 'cone', label: '', x: p.x, y: p.y }); renderPlayers(); });
+      document.getElementById('add-marker-btn').addEventListener('click', () => { const p = getAddPosition(); players.push({ id: `new_${nextId++}`, team: 'marker', label: '', x: p.x, y: p.y }); renderPlayers(); });
       
       document.getElementById('add-df-line-btn').addEventListener('click', () => { 
         const gId = `dfl_${nextId++}`;
-        players.push({ id: `${gId}_1`, team: 'df-node', groupId: gId, label: '', x: 350, y: 200 }); 
-        players.push({ id: `${gId}_2`, team: 'df-node', groupId: gId, label: '', x: 450, y: 200 }); 
+        const p = getAddPosition();
+        players.push({ id: `${gId}_1`, team: 'df-node', groupId: gId, label: '', x: p.x - 50, y: p.y }); 
+        players.push({ id: `${gId}_2`, team: 'df-node', groupId: gId, label: '', x: p.x + 50, y: p.y }); 
         renderPlayers(); 
       });
 
@@ -684,7 +762,7 @@
       nameInput.addEventListener('keydown', (e) => { if (e.key === 'Enter') saveName(); if (e.key === 'Escape') closeModal(); });
 
       // 初期起動
-      players = JSON.parse(JSON.stringify(defaultPlayers));
+      players = JSON.parse(JSON.stringify(defaultPlayersFull));
       renderPlayers();
     });
   </script>
