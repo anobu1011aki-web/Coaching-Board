@@ -31,19 +31,7 @@
       box-shadow: inset 0 2px 4px 0 rgba(0, 0, 0, 0.1); 
     }
     
-    /* コート右上のフローティングUI（表示切り替え用） */
-    .floating-ui {
-      position: absolute;
-      top: env(safe-area-inset-top, 8px);
-      right: max(env(safe-area-inset-right), 8px);
-      z-index: 10;
-      background: rgba(255, 255, 255, 0.9);
-      padding: 4px 8px;
-      border-radius: 6px;
-      box-shadow: 0 2px 4px rgba(0,0,0,0.2);
-    }
-
-    /* 🌟 アニメーション再生時のトランジション（滑らかな移動） */
+    /* アニメーション再生時のトランジション（滑らかな移動） */
     .animating-piece {
       transition: transform 1.2s ease-in-out;
     }
@@ -51,7 +39,7 @@
       transition: x1 1.2s ease-in-out, y1 1.2s ease-in-out, x2 1.2s ease-in-out, y2 1.2s ease-in-out;
     }
 
-    /* 🌟 横スクロールバーを隠す */
+    /* 横スクロールバーを隠す */
     .hide-scrollbar::-webkit-scrollbar {
       display: none;
     }
@@ -70,65 +58,70 @@
 </head>
 <body class="bg-gray-100 h-screen w-screen overflow-hidden flex flex-col font-sans text-gray-800 touch-none select-none">
 
-  <!-- 🌟 ヘッダーエリア（1行化・横スクロール・アイコン化） -->
-  <header class="bg-white shadow-sm z-20 flex-shrink-0">
-    <div class="px-2 py-1.5 flex items-center justify-between gap-3 overflow-x-auto hide-scrollbar">
+  <!-- 🌟 ヘッダーエリア（完全1列化・横スクロール・アイコン化） -->
+  <header class="bg-white shadow-sm z-20 flex-shrink-0 border-b border-gray-200">
+    <div class="px-1 py-1 flex items-center justify-start gap-1 overflow-x-auto hide-scrollbar whitespace-nowrap">
       
-      <!-- 駒・アイテムの追加・初期化ボタン -->
-      <div class="flex items-center gap-1.5 flex-nowrap shrink-0">
-        <button id="add-a-btn" class="px-2.5 py-1 bg-red-100 text-red-700 rounded text-xs font-bold shadow-sm border border-red-200 whitespace-nowrap">+ 🔴</button>
-        <button id="add-b-btn" class="px-2.5 py-1 bg-blue-100 text-blue-700 rounded text-xs font-bold shadow-sm border border-blue-200 whitespace-nowrap">+ 🔵</button>
-        <button id="add-df-line-btn" class="px-2 py-1 bg-indigo-100 text-indigo-700 rounded text-xs font-bold shadow-sm border border-indigo-200 whitespace-nowrap">+ 🔗</button>
-        <button id="add-cone-btn" class="px-2 py-1 bg-orange-100 text-orange-700 rounded text-xs font-bold shadow-sm border border-orange-200 whitespace-nowrap">+ 🔺</button>
-        <button id="add-marker-btn" class="px-2 py-1 bg-yellow-100 text-yellow-700 rounded text-xs font-bold shadow-sm border border-yellow-300 whitespace-nowrap">+ 🟡</button>
-        <button id="reset-btn" class="px-2.5 py-1 bg-gray-100 text-gray-700 rounded text-xs font-bold shadow-sm border border-gray-300 ml-1 whitespace-nowrap">初期化</button>
-      </div>
-
-      <!-- モード切り替えツールバー -->
-      <div class="flex items-center gap-1 bg-gray-50 p-1 rounded border border-gray-200 shrink-0">
-        <button id="mode-move" class="tool-btn active px-2 py-1 bg-white border border-gray-300 rounded text-xs font-bold whitespace-nowrap">👆 移動</button>
-        <button id="mode-draw-red" class="tool-btn px-2 py-1 bg-white border border-gray-300 text-red-600 rounded text-xs font-bold whitespace-nowrap">✏️ 赤</button>
-        <button id="mode-draw-blue" class="tool-btn px-2 py-1 bg-white border border-gray-300 text-blue-600 rounded text-xs font-bold whitespace-nowrap">✏️ 青</button>
-        <div class="w-px h-4 bg-gray-300 mx-1"></div> <!-- 区切り線 -->
-        <button id="clear-lines-btn" class="px-2 py-1 bg-gray-200 text-gray-700 rounded text-xs font-bold whitespace-nowrap">🗑️ 消去</button>
-      </div>
-
-    </div>
-    
-    <!-- ステータスバー（操作説明）高さを削る -->
-    <div id="instruction-text" class="w-full text-[10px] text-center font-bold bg-blue-50 text-blue-800 py-0.5 border-t border-b transition-colors duration-300">
-      【移動】ドラッグで移動 / 枠外へ捨てて削除 / 駒をタップで名前変更
-    </div>
-  </header>
-
-  <!-- 作戦ボードエリア -->
-  <main class="flex-grow relative w-full bg-[#2b3e50] overflow-hidden flex items-center justify-center" id="svg-container">
-    
-    <!-- フローティング表示切り替えUI -->
-    <div class="floating-ui flex items-center gap-1">
-      <select id="view-select" class="text-xs bg-transparent focus:outline-none cursor-pointer text-gray-700 font-bold">
-        <option value="full">フルコート</option>
+      <!-- 表示切り替え -->
+      <select id="view-select" class="text-xs bg-gray-100 border border-gray-300 rounded px-1 py-1 font-bold text-gray-700 focus:outline-none cursor-pointer shrink-0">
+        <option value="full">フル</option>
         <option value="half-left">左ハーフ</option>
         <option value="half-right">右ハーフ</option>
       </select>
-    </div>
 
-    <!-- 🌟 アニメーションコントロールパネル (より小さく、半透明に) -->
-    <div class="absolute bottom-2 left-1/2 transform -translate-x-1/2 z-10 bg-white/70 p-1.5 rounded-lg shadow-md backdrop-blur-md border border-white/50 flex items-center gap-1.5">
-      <button id="record-scene-btn" class="px-2.5 py-1.5 bg-red-100/90 hover:bg-red-200 text-red-700 rounded-md text-[10px] font-bold shadow-sm transition-colors flex items-center gap-1 border border-red-200 whitespace-nowrap">
-        ⏺ 記録 <span id="scene-count" class="bg-red-500 text-white px-1.5 py-0.5 rounded-full leading-none">0</span>
-      </button>
-      <button id="play-anim-btn" class="px-3 py-1.5 bg-green-100/90 hover:bg-green-200 text-green-700 rounded-md text-[10px] font-bold shadow-sm transition-colors whitespace-nowrap border border-green-200">
-        ▶ 再生
-      </button>
-      <div class="w-px h-5 bg-gray-400 mx-0.5"></div>
-      <button id="clear-anim-btn" class="px-2 py-1.5 bg-gray-100/90 hover:bg-gray-200 text-gray-600 rounded-md text-[10px] font-bold shadow-sm transition-colors whitespace-nowrap border border-gray-200">
-        リセット
-      </button>
-    </div>
+      <div class="w-px h-4 bg-gray-300 mx-0.5 shrink-0"></div>
 
-    <!-- SVGキャンバス -->
-    <svg id="board" viewBox="-40 -40 880 480" class="w-full h-full max-h-full object-contain block transition-all duration-500 touch-none">
+      <!-- 駒・アイテムの追加・初期化ボタン -->
+      <div class="flex items-center gap-1 shrink-0">
+        <button id="add-a-btn" class="px-1.5 py-1 bg-red-100 text-red-700 rounded text-xs font-bold shadow-sm border border-red-200">+赤</button>
+        <button id="add-b-btn" class="px-1.5 py-1 bg-blue-100 text-blue-700 rounded text-xs font-bold shadow-sm border border-blue-200">+青</button>
+        <button id="add-df-line-btn" class="px-1.5 py-1 bg-indigo-100 text-indigo-700 rounded text-xs font-bold shadow-sm border border-indigo-200">+線</button>
+        <button id="add-cone-btn" class="px-1.5 py-1 bg-orange-100 text-orange-700 rounded text-xs font-bold shadow-sm border border-orange-200">+🔺</button>
+        <button id="add-marker-btn" class="px-1.5 py-1 bg-yellow-100 text-yellow-700 rounded text-xs font-bold shadow-sm border border-yellow-300">+🟡</button>
+        <button id="reset-btn" class="px-1.5 py-1 bg-gray-100 text-gray-700 rounded text-xs font-bold shadow-sm border border-gray-300 ml-0.5">初期化</button>
+      </div>
+
+      <div class="w-px h-4 bg-gray-300 mx-0.5 shrink-0"></div>
+
+      <!-- モード切り替え（移動・ペン） -->
+      <div class="flex items-center gap-1 bg-gray-50 p-0.5 rounded border border-gray-200 shrink-0">
+        <button id="mode-move" class="tool-btn active px-1.5 py-1 bg-white border border-gray-300 rounded text-xs font-bold flex items-center">
+          👆
+        </button>
+        <!-- 🌟 アイコンだけのペンボタン -->
+        <button id="mode-draw-red" class="tool-btn px-1.5 py-1 bg-white border border-gray-300 rounded flex items-center justify-center" title="赤ペン">
+          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#ef4444" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21.174 6.812a1 1 0 0 0-3.986-3.987L3.842 16.174a2 2 0 0 0-.5.83l-1.321 4.352a.5.5 0 0 0 .623.622l4.353-1.32a2 2 0 0 0 .83-.497z"/><path d="m15 5 4 4"/></svg>
+        </button>
+        <button id="mode-draw-blue" class="tool-btn px-1.5 py-1 bg-white border border-gray-300 rounded flex items-center justify-center" title="青ペン">
+          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#3b82f6" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21.174 6.812a1 1 0 0 0-3.986-3.987L3.842 16.174a2 2 0 0 0-.5.83l-1.321 4.352a.5.5 0 0 0 .623.622l4.353-1.32a2 2 0 0 0 .83-.497z"/><path d="m15 5 4 4"/></svg>
+        </button>
+        <div class="w-px h-4 bg-gray-300 mx-0.5"></div>
+        <button id="clear-lines-btn" class="px-1.5 py-1 bg-gray-200 text-gray-700 rounded text-xs font-bold">🗑️</button>
+      </div>
+
+      <div class="w-px h-4 bg-gray-300 mx-0.5 shrink-0"></div>
+
+      <!-- 🎬 アニメーション動画コントロール -->
+      <div class="flex items-center gap-1 bg-green-50 p-0.5 rounded border border-green-200 shrink-0 pr-2">
+        <button id="record-scene-btn" class="px-1.5 py-1 bg-white border border-red-300 text-red-600 rounded text-[10px] font-bold shadow-sm flex items-center gap-0.5">
+          ⏺ <span id="scene-count" class="bg-red-500 text-white px-1 py-0.5 rounded-full text-[9px] leading-none">0</span>
+        </button>
+        <button id="play-anim-btn" class="px-2 py-1 bg-green-500 text-white rounded text-[10px] font-bold shadow-sm">
+          ▶ 再生
+        </button>
+        <button id="clear-anim-btn" class="px-1.5 py-1 bg-white border border-gray-300 text-gray-600 rounded text-[10px] font-bold shadow-sm">
+          🗑️
+        </button>
+      </div>
+
+    </div>
+  </header>
+
+  <!-- 🌟 作戦ボードエリア -->
+  <main class="flex-grow relative w-full bg-[#2b3e50] overflow-hidden flex items-center justify-center" id="svg-container">
+    
+    <!-- SVGキャンバス 🌟 ハーフコートでアスペクト比が崩れないように preserveAspectRatio を追加 -->
+    <svg id="board" viewBox="-40 -40 880 480" preserveAspectRatio="xMidYMid meet" class="w-full h-full max-h-full object-contain block transition-all duration-500 touch-none drop-shadow-lg">
       <defs>
         <clipPath id="court-clip">
           <rect x="0" y="0" width="800" height="400" />
@@ -154,7 +147,7 @@
 
       <!-- 背景とラインの描画レイヤー -->
       <g id="court-layer">
-        <rect x="-40" y="-40" width="880" height="480" fill="#2b3e50" />
+        <rect x="-400" y="-400" width="1600" height="1200" fill="#2b3e50" />
         <rect x="0" y="0" width="800" height="400" fill="url(#courtGrad)" />
 
         <g clip-path="url(#court-clip)">
@@ -209,7 +202,6 @@
       const playersLayer = document.getElementById('players-layer');
       const dfLinesLayer = document.getElementById('df-lines-layer');
       const drawLayer = document.getElementById('draw-layer');
-      const instructionText = document.getElementById('instruction-text');
       
       const btnMove = document.getElementById('mode-move');
       const btnDrawRed = document.getElementById('mode-draw-red');
@@ -235,14 +227,10 @@
         if (mode === 'move') {
           btnMove.classList.add('active');
           svg.style.cursor = 'default';
-          instructionText.textContent = '【移動】ドラッグで移動 / 枠外へ捨てて削除 / 駒をタップで名前変更';
-          instructionText.className = 'w-full text-[10px] text-center font-bold bg-blue-50 text-blue-800 py-0.5 border-t border-b transition-colors duration-300';
         } else {
           if (mode === 'draw-red') btnDrawRed.classList.add('active');
           if (mode === 'draw-blue') btnDrawBlue.classList.add('active');
           svg.style.cursor = 'crosshair';
-          instructionText.textContent = '【ペン】コート上をドラッグして矢印を描画します';
-          instructionText.className = 'w-full text-[10px] text-center font-bold bg-yellow-50 text-yellow-800 py-0.5 border-t border-b transition-colors duration-300';
         }
       }
 
@@ -256,11 +244,18 @@
         renderPlayers();
       });
 
+      // 🌟 ハーフコート切り替えの最適化
       viewSelect.addEventListener('change', (e) => {
         const val = e.target.value;
-        if (val === 'full') svg.setAttribute('viewBox', '-40 -40 880 480');
-        else if (val === 'half-left') svg.setAttribute('viewBox', '-40 -40 440 480');
-        else if (val === 'half-right') svg.setAttribute('viewBox', '400 -40 440 480');
+        if (val === 'full') {
+          svg.setAttribute('viewBox', '-40 -40 880 480');
+        } else if (val === 'half-left') {
+          // 左側だけを画面いっぱいにズーム
+          svg.setAttribute('viewBox', '-30 -10 440 420');
+        } else if (val === 'half-right') {
+          // 右側だけを画面いっぱいにズーム
+          svg.setAttribute('viewBox', '390 -10 440 420');
+        }
       });
 
       function getMousePosition(evt) {
@@ -352,7 +347,6 @@
 
       function updateDfLines() {
         const dfGroups = {};
-        
         players.forEach(p => {
           if (p.team === 'df-node') {
             if (!dfGroups[p.groupId]) dfGroups[p.groupId] = [];
@@ -696,5 +690,3 @@
   </script>
 </body>
 </html>
-
-
