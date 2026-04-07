@@ -12,98 +12,152 @@
       -webkit-user-select: none; 
     }
     
-    /* 駒のテキストスタイル */
+    /* 駒のテキストスタイル：太字にして視認性を高める */
     .player-label { 
-      font-family: sans-serif; 
-      font-weight: bold; 
-      pointer-events: none; /* ドラッグイベントの邪魔をしない */
+      font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; 
+      font-weight: 900; 
+      pointer-events: none;
+      text-shadow: 0px 1px 2px rgba(0,0,0,0.6); /* 白文字をくっきりさせる影 */
     }
     
     /* モーダルの背景ぼかし */
     .modal-backdrop { 
-      backdrop-filter: blur(4px); 
+      backdrop-filter: blur(8px); 
     }
     
-    /* 選択中のツールボタンのスタイル */
+    /* ツールボタンのトランジションと選択時のスタイル */
+    .tool-btn {
+      transition: all 0.2s ease;
+    }
     .tool-btn.active { 
-      background-color: #e5e7eb; 
-      border-color: #9ca3af; 
-      box-shadow: inset 0 2px 4px 0 rgba(0, 0, 0, 0.1); 
+      background-color: #f1f5f9; 
+      box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.05); 
+      border-color: #cbd5e1;
+      transform: translateY(1px);
     }
     
     /* コート右上のフローティングUI（表示切り替え用） */
     .floating-ui {
       position: absolute;
-      top: 8px;
-      right: 8px;
+      top: 12px;
+      right: 12px;
       z-index: 10;
-      background: rgba(255, 255, 255, 0.9);
-      padding: 4px 8px;
-      border-radius: 6px;
-      box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+      background: rgba(255, 255, 255, 0.95);
+      padding: 6px 12px;
+      border-radius: 8px;
+      box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1), 0 2px 4px -1px rgba(0,0,0,0.06);
+      backdrop-filter: blur(4px);
+      border: 1px solid rgba(255,255,255,0.4);
     }
   </style>
 </head>
-<body class="bg-gray-100 h-screen w-screen overflow-hidden flex flex-col font-sans text-gray-800 touch-none select-none">
+<body class="bg-slate-100 h-screen w-screen overflow-hidden flex flex-col font-sans text-slate-800 touch-none select-none">
 
-  <!-- ヘッダーエリア（極力コンパクトに設計） -->
-  <header class="bg-white shadow-sm z-20 flex-shrink-0">
-    <div class="px-2 py-1 sm:px-4 sm:py-2 flex flex-wrap justify-between items-center gap-2">
+  <!-- ヘッダーエリア -->
+  <header class="bg-white shadow-md z-20 flex-shrink-0 border-b border-slate-200">
+    <div class="px-2 py-2 sm:px-4 sm:py-3 flex flex-wrap justify-between items-center gap-2">
       
       <!-- タイトルと駒の追加・初期化ボタン -->
       <div class="flex items-center gap-2">
-        <h1 class="text-sm sm:text-base font-bold text-gray-700 hidden sm:block mr-2">作戦ボード</h1>
-        <button id="add-a-btn" class="px-2 py-1 bg-red-100 text-red-700 rounded text-xs font-semibold shadow-sm border border-red-200 hover:bg-red-200 transition-colors">+ 赤駒</button>
-        <button id="add-b-btn" class="px-2 py-1 bg-blue-100 text-blue-700 rounded text-xs font-semibold shadow-sm border border-blue-200 hover:bg-blue-200 transition-colors">+ 青駒</button>
-        <button id="reset-btn" class="px-2 py-1 bg-gray-100 text-gray-700 rounded text-xs font-semibold shadow-sm border border-gray-300 hover:bg-gray-200 transition-colors">初期化</button>
+        <h1 class="text-base sm:text-lg font-black text-slate-700 hidden sm:block mr-2 tracking-tight">作戦ボード</h1>
+        
+        <button id="add-a-btn" class="flex items-center gap-1 px-3 py-1.5 bg-gradient-to-b from-red-400 to-red-600 text-white rounded-full text-xs font-bold shadow-sm hover:from-red-500 hover:to-red-700 transition-all">
+          <span class="text-sm leading-none font-black">+</span> 赤駒
+        </button>
+        <button id="add-b-btn" class="flex items-center gap-1 px-3 py-1.5 bg-gradient-to-b from-blue-400 to-blue-600 text-white rounded-full text-xs font-bold shadow-sm hover:from-blue-500 hover:to-blue-700 transition-all">
+          <span class="text-sm leading-none font-black">+</span> 青駒
+        </button>
+        <button id="reset-btn" class="flex items-center gap-1 px-3 py-1.5 bg-white border border-slate-300 text-slate-600 rounded-full text-xs font-bold shadow-sm hover:bg-slate-50 transition-all ml-1">
+          🔄 初期化
+        </button>
       </div>
 
       <!-- モード切り替えツールバー -->
-      <div class="flex items-center gap-1 bg-gray-50 p-1 rounded border border-gray-200">
-        <button id="mode-move" class="tool-btn active px-2 py-1 bg-white border border-gray-300 rounded text-xs font-semibold hover:bg-gray-100 transition-colors">👆 移動</button>
-        <button id="mode-draw-red" class="tool-btn px-2 py-1 bg-white border border-gray-300 text-red-600 rounded text-xs font-semibold hover:bg-red-50 transition-colors">✏️ 赤線</button>
-        <button id="mode-draw-blue" class="tool-btn px-2 py-1 bg-white border border-gray-300 text-blue-600 rounded text-xs font-semibold hover:bg-blue-50 transition-colors">✏️ 青線</button>
-        <div class="w-px h-5 bg-gray-300 mx-1"></div> <!-- 区切り線 -->
-        <button id="clear-lines-btn" class="px-2 py-1 bg-gray-200 text-gray-700 rounded text-xs font-semibold hover:bg-gray-300 transition-colors">🗑️ 線消去</button>
+      <div class="flex items-center gap-1 bg-slate-50 p-1.5 rounded-lg border border-slate-200 shadow-inner">
+        <button id="mode-move" class="tool-btn active px-3 py-1.5 bg-white border border-slate-300 text-slate-700 rounded-md text-xs font-bold shadow-sm">👆 移動</button>
+        <button id="mode-draw-red" class="tool-btn px-3 py-1.5 bg-white border border-slate-300 text-red-600 rounded-md text-xs font-bold shadow-sm">✏️ 赤線</button>
+        <button id="mode-draw-blue" class="tool-btn px-3 py-1.5 bg-white border border-slate-300 text-blue-600 rounded-md text-xs font-bold shadow-sm">✏️ 青線</button>
+        <div class="w-px h-6 bg-slate-300 mx-1"></div> <!-- 区切り線 -->
+        <button id="clear-lines-btn" class="px-3 py-1.5 bg-slate-200 text-slate-600 rounded-md text-xs font-bold hover:bg-slate-300 transition-colors">🗑️ 線消去</button>
       </div>
 
     </div>
     
-    <!-- ステータスバー（現在のモードに応じた操作説明） -->
-    <div id="instruction-text" class="w-full text-[10px] sm:text-xs text-center font-medium bg-blue-50 text-blue-800 py-1 border-t border-b transition-colors duration-300">
+    <!-- ステータスバー（操作説明） -->
+    <div id="instruction-text" class="w-full text-[10px] sm:text-xs text-center font-bold bg-blue-50 text-blue-800 py-1.5 border-t border-b transition-colors duration-300">
       【移動モード】駒をドラッグして移動 / 枠外へ捨てて削除 / タップで名前変更
     </div>
   </header>
 
-  <!-- 作戦ボードエリア（画面の残り領域をすべて使う） -->
-  <main class="flex-grow relative w-full bg-[#2b3e50] overflow-hidden flex items-center justify-center p-1" id="svg-container">
+  <!-- 作戦ボードエリア -->
+  <main class="flex-grow relative w-full bg-slate-800 overflow-hidden flex items-center justify-center p-1" id="svg-container">
     
     <!-- フローティング表示切り替えUI -->
     <div class="floating-ui flex items-center gap-1">
-      <label for="view-select" class="text-[10px] font-bold text-gray-600 hidden sm:inline cursor-pointer">表示:</label>
-      <select id="view-select" class="text-xs bg-transparent focus:outline-none cursor-pointer text-gray-700 font-bold">
+      <label for="view-select" class="text-[10px] font-bold text-slate-500 hidden sm:inline cursor-pointer">表示:</label>
+      <select id="view-select" class="text-xs bg-transparent focus:outline-none cursor-pointer text-slate-700 font-black">
         <option value="full">フルコート</option>
         <option value="half-left">左ハーフ</option>
         <option value="half-right">右ハーフ</option>
       </select>
     </div>
 
-    <!-- 
-      SVGでコートと駒を描画 
-      viewBoxを変更することでフルコートとハーフコートの切り替えを実現
-    -->
-    <svg id="board" viewBox="-40 -40 880 480" class="w-full h-full max-h-full object-contain block transition-all duration-500 touch-none">
+    <!-- SVGキャンバス -->
+    <svg id="board" viewBox="-60 -60 920 520" class="w-full h-full max-h-full object-contain block transition-all duration-500 touch-none">
       <defs>
+        <!-- 【重要】コートからはみ出した線を切るためのクリップパス -->
+        <clipPath id="court-clip">
+          <rect x="0" y="0" width="800" height="400" />
+        </clipPath>
+
         <!-- ゴールエリアの網目パターン -->
         <pattern id="goalPattern" width="10" height="10" patternUnits="userSpaceOnUse" patternTransform="rotate(45)">
           <rect width="5" height="10" fill="#ef4444" />
           <rect x="5" width="5" height="10" fill="white" />
         </pattern>
-        <!-- ペン描画用の矢印マーカー（赤） -->
+
+        <!-- コートの床のグラデーション -->
+        <linearGradient id="courtGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+          <stop offset="0%" stop-color="#f5b87f" />
+          <stop offset="100%" stop-color="#e09e5a" />
+        </linearGradient>
+
+        <!-- ゴールエリア（水色）のグラデーション -->
+        <linearGradient id="goalAreaGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+          <stop offset="0%" stop-color="#60a5fa" />
+          <stop offset="100%" stop-color="#2563eb" />
+        </linearGradient>
+
+        <!-- 駒（赤）の立体グラデーション -->
+        <radialGradient id="redPiece" cx="35%" cy="35%" r="65%">
+          <stop offset="0%" stop-color="#fca5a5" />
+          <stop offset="50%" stop-color="#ef4444" />
+          <stop offset="100%" stop-color="#b91c1c" />
+        </radialGradient>
+
+        <!-- 駒（青）の立体グラデーション -->
+        <radialGradient id="bluePiece" cx="35%" cy="35%" r="65%">
+          <stop offset="0%" stop-color="#93c5fd" />
+          <stop offset="50%" stop-color="#3b82f6" />
+          <stop offset="100%" stop-color="#1d4ed8" />
+        </radialGradient>
+
+        <!-- ボール（黄）の立体グラデーション -->
+        <radialGradient id="yellowPiece" cx="35%" cy="35%" r="65%">
+          <stop offset="0%" stop-color="#fef08a" />
+          <stop offset="50%" stop-color="#eab308" />
+          <stop offset="100%" stop-color="#a16207" />
+        </radialGradient>
+
+        <!-- 駒の影（ドロップシャドウ） -->
+        <filter id="shadow" x="-20%" y="-20%" width="140%" height="140%">
+          <feDropShadow dx="2" dy="4" stdDeviation="3" flood-opacity="0.4" />
+        </filter>
+
+        <!-- ペン描画用の矢印マーカー -->
         <marker id="arrow-red" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
           <path d="M 0 0 L 10 5 L 0 10 z" fill="#ef4444" />
         </marker>
-        <!-- ペン描画用の矢印マーカー（青） -->
         <marker id="arrow-blue" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
           <path d="M 0 0 L 10 5 L 0 10 z" fill="#3b82f6" />
         </marker>
@@ -111,40 +165,48 @@
 
       <!-- 背景とラインの描画レイヤー -->
       <g id="court-layer">
-        <!-- コート外側の余白 -->
-        <rect x="-40" y="-40" width="880" height="480" fill="#2b3e50" />
+        <!-- コート外側の余白（体育館の床） -->
+        <rect x="-100" y="-100" width="1000" height="600" fill="#1e293b" />
+        
         <!-- コート本体 (40m x 20m) -->
-        <rect x="0" y="0" width="800" height="400" fill="#e0ab76" stroke="white" stroke-width="3" />
-        <!-- センターライン -->
-        <line x1="400" y1="0" x2="400" y2="400" stroke="white" stroke-width="3" />
-        <!-- センタースローエリア -->
-        <circle cx="400" cy="200" r="40" fill="none" stroke="white" stroke-width="2" />
-        <!-- 交代ライン -->
+        <rect x="0" y="0" width="800" height="400" fill="url(#courtGrad)" />
+
+        <!-- ＝＝＝ クリップパス適用（コートからはみ出さないライン） ＝＝＝ -->
+        <g clip-path="url(#court-clip)">
+          <!-- センターライン -->
+          <line x1="400" y1="0" x2="400" y2="400" stroke="white" stroke-width="3" opacity="0.9" />
+          <!-- センタースローエリア -->
+          <circle cx="400" cy="200" r="40" fill="none" stroke="white" stroke-width="2.5" opacity="0.9" />
+
+          <!-- ================= 左側エリア ================= -->
+          <path d="M 0 50 A 120 120 0 0 1 120 170 L 120 230 A 120 120 0 0 1 0 350 Z" fill="url(#goalAreaGrad)" stroke="white" stroke-width="2.5" />
+          <!-- 9mライン (はみ出し部分はクリップされて見えなくなる) -->
+          <path d="M 0 -10 A 180 180 0 0 1 180 170 L 180 230 A 180 180 0 0 1 0 410" fill="none" stroke="white" stroke-width="2.5" stroke-dasharray="10, 8" opacity="0.8" />
+          <!-- 7mライン -->
+          <line x1="140" y1="190" x2="140" y2="210" stroke="white" stroke-width="2.5" />
+          <!-- 4mライン（キーパーライン：少し短く修正） -->
+          <line x1="80" y1="195" x2="80" y2="205" stroke="white" stroke-width="2.5" />
+
+          <!-- ================= 右側エリア ================= -->
+          <path d="M 800 50 A 120 120 0 0 0 680 170 L 680 230 A 120 120 0 0 0 800 350 Z" fill="url(#goalAreaGrad)" stroke="white" stroke-width="2.5" />
+          <!-- 9mライン -->
+          <path d="M 800 -10 A 180 180 0 0 0 620 170 L 620 230 A 180 180 0 0 0 800 410" fill="none" stroke="white" stroke-width="2.5" stroke-dasharray="10, 8" opacity="0.8" />
+          <!-- 7mライン -->
+          <line x1="660" y1="190" x2="660" y2="210" stroke="white" stroke-width="2.5" />
+          <!-- 4mライン -->
+          <line x1="720" y1="195" x2="720" y2="205" stroke="white" stroke-width="2.5" />
+        </g>
+        <!-- ＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝ -->
+
+        <!-- コートの最も外側の白い枠線 -->
+        <rect x="0" y="0" width="800" height="400" fill="none" stroke="white" stroke-width="3" />
+
+        <!-- 交代ライン（枠線をまたぐためクリップ外に配置） -->
         <line x1="310" y1="-5" x2="310" y2="5" stroke="white" stroke-width="3" />
         <line x1="490" y1="-5" x2="490" y2="5" stroke="white" stroke-width="3" />
 
-        <!-- ================= 左側エリア ================= -->
-        <!-- 6mライン (ゴールエリア) -->
-        <path d="M 0 50 A 120 120 0 0 1 120 170 L 120 230 A 120 120 0 0 1 0 350 Z" fill="#4da6ff" stroke="white" stroke-width="2" />
-        <!-- 9mライン (フリースローライン) -->
-        <path d="M 0 -10 A 180 180 0 0 1 180 170 L 180 230 A 180 180 0 0 1 0 410" fill="none" stroke="white" stroke-width="2" stroke-dasharray="10, 10" />
-        <!-- 7mライン (ペナルティスロー) -->
-        <line x1="140" y1="190" x2="140" y2="210" stroke="white" stroke-width="2" />
-        <!-- 4mライン (ゴールキーパーライン) -->
-        <line x1="80" y1="185" x2="80" y2="215" stroke="white" stroke-width="2" />
         <!-- ゴール -->
         <rect x="-20" y="170" width="20" height="60" fill="url(#goalPattern)" stroke="white" stroke-width="2" />
-
-        <!-- ================= 右側エリア ================= -->
-        <!-- 6mライン (ゴールエリア) -->
-        <path d="M 800 50 A 120 120 0 0 0 680 170 L 680 230 A 120 120 0 0 0 800 350 Z" fill="#4da6ff" stroke="white" stroke-width="2" />
-        <!-- 9mライン (フリースローライン) -->
-        <path d="M 800 -10 A 180 180 0 0 0 620 170 L 620 230 A 180 180 0 0 0 800 410" fill="none" stroke="white" stroke-width="2" stroke-dasharray="10, 10" />
-        <!-- 7mライン (ペナルティスロー) -->
-        <line x1="660" y1="190" x2="660" y2="210" stroke="white" stroke-width="2" />
-        <!-- 4mライン (ゴールキーパーライン) -->
-        <line x1="720" y1="185" x2="720" y2="215" stroke="white" stroke-width="2" />
-        <!-- ゴール -->
         <rect x="800" y="170" width="20" height="60" fill="url(#goalPattern)" stroke="white" stroke-width="2" />
       </g>
 
@@ -156,14 +218,14 @@
   </main>
 
   <!-- 名前変更用のモーダルダイアログ -->
-  <div id="name-modal" class="fixed inset-0 bg-black bg-opacity-50 modal-backdrop hidden flex justify-center items-center z-50">
-    <div class="bg-white rounded-xl shadow-xl p-5 w-72 max-w-[90%] transform transition-all scale-100">
-      <h3 class="text-base font-bold text-gray-800 mb-3 text-center border-b pb-2">駒の名前を変更</h3>
-      <input type="text" id="name-input" class="w-full border border-gray-300 rounded-lg p-3 mb-4 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-center text-xl font-bold transition-shadow" autocomplete="off" maxlength="3" placeholder="背番号など">
-      <p class="text-xs text-gray-500 text-center mb-4">※最大3文字まで</p>
+  <div id="name-modal" class="fixed inset-0 bg-slate-900/50 modal-backdrop hidden flex justify-center items-center z-50">
+    <div class="bg-white rounded-2xl shadow-2xl p-6 w-72 max-w-[90%] transform transition-all border border-slate-100">
+      <h3 class="text-lg font-black text-slate-800 mb-4 text-center">駒の名前を変更</h3>
+      <input type="text" id="name-input" class="w-full border-2 border-slate-200 rounded-xl p-3 mb-2 focus:outline-none focus:border-blue-500 focus:ring-4 focus:ring-blue-500/20 text-center text-2xl font-black text-slate-700 transition-all" autocomplete="off" maxlength="3" placeholder="背番号">
+      <p class="text-xs text-slate-400 text-center mb-5 font-medium">※最大3文字まで</p>
       <div class="flex justify-between gap-3">
-        <button id="modal-cancel" class="flex-1 py-2 bg-gray-200 text-gray-700 rounded-lg text-sm font-bold hover:bg-gray-300 transition-colors">キャンセル</button>
-        <button id="modal-save" class="flex-1 py-2 bg-blue-600 text-white rounded-lg text-sm font-bold hover:bg-blue-700 transition-colors shadow-md">保存する</button>
+        <button id="modal-cancel" class="flex-1 py-2.5 bg-slate-100 text-slate-600 rounded-xl text-sm font-bold hover:bg-slate-200 transition-colors">キャンセル</button>
+        <button id="modal-save" class="flex-1 py-2.5 bg-gradient-to-r from-blue-500 to-blue-600 text-white rounded-xl text-sm font-bold shadow-md hover:from-blue-600 hover:to-blue-700 transition-all">保存する</button>
       </div>
     </div>
   </div>
@@ -171,7 +233,6 @@
   <!-- アプリケーションのロジック -->
   <script>
     document.addEventListener('DOMContentLoaded', () => {
-      // DOM要素の取得
       const svg = document.getElementById('board');
       const playersLayer = document.getElementById('players-layer');
       const drawLayer = document.getElementById('draw-layer');
@@ -183,8 +244,7 @@
       const btnClearLines = document.getElementById('clear-lines-btn');
       const viewSelect = document.getElementById('view-select');
 
-      // 状態管理変数
-      let mode = 'move'; // 現在のツールモード: 'move', 'draw-red', 'draw-blue'
+      let mode = 'move';
       let isDrawing = false;
       let currentPath = null;
       let pathData = '';
@@ -192,14 +252,9 @@
       // ==========================================
       // UI・モード制御
       // ==========================================
-      
-      /**
-       * ツールモードを切り替える
-       */
       function setMode(newMode) {
         mode = newMode;
         
-        // ボタンのアクティブ状態をリセット
         btnMove.classList.remove('active');
         btnDrawRed.classList.remove('active');
         btnDrawBlue.classList.remove('active');
@@ -208,22 +263,20 @@
           btnMove.classList.add('active');
           svg.style.cursor = 'default';
           instructionText.textContent = '【移動モード】駒をドラッグして移動 / 枠外へ捨てて削除 / タップで名前変更';
-          instructionText.className = 'w-full text-[10px] sm:text-xs text-center font-medium bg-blue-50 text-blue-800 py-1 border-t border-b transition-colors duration-300';
+          instructionText.className = 'w-full text-[10px] sm:text-xs text-center font-bold bg-blue-50 text-blue-800 py-1.5 border-t border-b transition-colors duration-300';
         } else {
           if (mode === 'draw-red') btnDrawRed.classList.add('active');
           if (mode === 'draw-blue') btnDrawBlue.classList.add('active');
           svg.style.cursor = 'crosshair';
           instructionText.textContent = '【ペンモード】コート上をドラッグして矢印を描画します';
-          instructionText.className = 'w-full text-[10px] sm:text-xs text-center font-medium bg-yellow-50 text-yellow-800 py-1 border-t border-b transition-colors duration-300';
+          instructionText.className = 'w-full text-[10px] sm:text-xs text-center font-bold bg-amber-50 text-amber-800 py-1.5 border-t border-b transition-colors duration-300';
         }
       }
 
-      // ツールボタンのイベントリスナー
       btnMove.addEventListener('click', () => setMode('move'));
       btnDrawRed.addEventListener('click', () => setMode('draw-red'));
       btnDrawBlue.addEventListener('click', () => setMode('draw-blue'));
       
-      // 線を消去する
       btnClearLines.addEventListener('click', () => { 
         drawLayer.innerHTML = ''; 
       });
@@ -232,27 +285,22 @@
       viewSelect.addEventListener('change', (e) => {
         const val = e.target.value;
         if (val === 'full') {
-          svg.setAttribute('viewBox', '-40 -40 880 480');
+          svg.setAttribute('viewBox', '-60 -60 920 520');
         } else if (val === 'half-left') {
-          svg.setAttribute('viewBox', '-40 -40 440 480');
+          svg.setAttribute('viewBox', '-60 -60 480 520');
         } else if (val === 'half-right') {
-          svg.setAttribute('viewBox', '400 -40 440 480');
+          svg.setAttribute('viewBox', '380 -60 480 520');
         }
       });
 
       // ==========================================
       // SVG座標計算
       // ==========================================
-      
-      /**
-       * マウスやタッチのスクリーン座標をSVG内のローカル座標に変換する
-       */
       function getMousePosition(evt) {
         const CTM = svg.getScreenCTM();
         if (evt.touches && evt.touches.length > 0) {
           evt = evt.touches[0];
         } else if (evt.changedTouches && evt.changedTouches.length > 0) {
-          // touchendの場合はchangedTouchesを参照する
           evt = evt.changedTouches[0];
         }
         return {
@@ -264,7 +312,6 @@
       // ==========================================
       // ペン描画機能 (矢印)
       // ==========================================
-      
       function startDraw(evt) {
         if (mode === 'move') return;
         evt.preventDefault();
@@ -277,9 +324,8 @@
         currentPath.setAttribute('stroke-width', '4');
         currentPath.setAttribute('stroke-linecap', 'round');
         currentPath.setAttribute('stroke-linejoin', 'round');
-        currentPath.setAttribute('opacity', '0.8');
+        currentPath.setAttribute('opacity', '0.85');
 
-        // モードに応じて色とマーカー（矢印）を設定
         if (mode === 'draw-red') {
           currentPath.setAttribute('stroke', '#ef4444');
           currentPath.setAttribute('marker-end', 'url(#arrow-red)');
@@ -307,9 +353,7 @@
         }
       }
 
-      // ペン描画用のイベントリスナー (コート背景に対する操作)
       svg.addEventListener('mousedown', (e) => { 
-        // 駒をクリックした場合は描画を開始しない
         if (e.target.tagName !== 'circle' && e.target.tagName !== 'text' && e.target.tagName !== 'g') {
            startDraw(e); 
         }
@@ -328,19 +372,16 @@
       window.addEventListener('touchend', endDraw);
 
       // ==========================================
-      // 駒（選手・ボール）の管理とドラッグ処理
+      // 駒（選手・ボール）の管理
       // ==========================================
-      
       let players = [];
       let draggingElement = null;
       let offset = { x: 0, y: 0 };
       let dragStartTime = 0;
       let editingPlayerId = null;
-      let nextId = 100; // 新規追加用の一意なID用
+      let nextId = 100;
 
-      // 初期配置データ (ハンドボールの基本フォーメーションを意識)
       const defaultPlayers = [
-        // Aチーム (左)
         { id: 'a1', team: 'A', label: 'GK', x: 20, y: 200 },
         { id: 'a2', team: 'A', label: 'LW', x: 130, y: 60 },
         { id: 'a3', team: 'A', label: 'LB', x: 150, y: 120 },
@@ -348,7 +389,6 @@
         { id: 'a5', team: 'A', label: 'RB', x: 150, y: 280 },
         { id: 'a6', team: 'A', label: 'RW', x: 130, y: 340 },
         { id: 'a7', team: 'A', label: 'PV', x: 130, y: 160 },
-        // Bチーム (右)
         { id: 'b1', team: 'B', label: 'GK', x: 780, y: 200 },
         { id: 'b2', team: 'B', label: 'RW', x: 670, y: 40 },
         { id: 'b3', team: 'B', label: 'RB', x: 650, y: 100 },
@@ -356,13 +396,9 @@
         { id: 'b5', team: 'B', label: 'LB', x: 650, y: 300 },
         { id: 'b6', team: 'B', label: 'LW', x: 670, y: 360 },
         { id: 'b7', team: 'B', label: 'PV', x: 670, y: 240 },
-        // ボール
         { id: 'ball', team: 'ball', label: '⚽', x: 400, y: 200 }
       ];
 
-      /**
-       * 駒のデータを元にSVG要素を生成・描画する
-       */
       function renderPlayers() {
         playersLayer.innerHTML = '';
         
@@ -370,43 +406,36 @@
           const isBall = player.team === 'ball';
           const radius = isBall ? 10 : 16;
           
-          let fill = '#ef4444'; // Aチーム色(赤)
-          if (isBall) fill = '#fde047'; // ボール色(黄)
-          else if (player.team === 'B') fill = '#3b82f6'; // Bチーム色(青)
+          let fillUrl = 'url(#redPiece)';
+          if (isBall) fillUrl = 'url(#yellowPiece)';
+          else if (player.team === 'B') fillUrl = 'url(#bluePiece)';
           
-          // <g> グループ要素
           const group = document.createElementNS('http://www.w3.org/2000/svg', 'g');
           group.setAttribute('transform', `translate(${player.x}, ${player.y})`);
           group.setAttribute('class', 'no-select cursor-pointer');
           group.dataset.id = player.id;
 
-          // 影
-          const shadow = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
-          shadow.setAttribute('r', radius); 
-          shadow.setAttribute('cy', '2'); 
-          shadow.setAttribute('fill', 'rgba(0,0,0,0.3)');
-          group.appendChild(shadow);
-
-          // 本体
+          // 本体の描画（影とグラデーションを適用してリッチに）
           const circle = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
           circle.setAttribute('r', radius); 
-          circle.setAttribute('fill', fill); 
-          circle.setAttribute('stroke', 'white'); 
+          circle.setAttribute('fill', fillUrl); 
+          circle.setAttribute('stroke', 'rgba(255,255,255,0.7)'); 
           circle.setAttribute('stroke-width', '2');
+          circle.setAttribute('filter', 'url(#shadow)');
           group.appendChild(circle);
 
-          // テキストラベル
+          // テキスト
           const text = document.createElementNS('http://www.w3.org/2000/svg', 'text');
           text.setAttribute('x', '0'); 
           text.setAttribute('y', '4'); 
           text.setAttribute('text-anchor', 'middle');
-          text.setAttribute('fill', isBall ? 'black' : 'white'); 
+          text.setAttribute('fill', isBall ? '#1f2937' : 'white'); 
           text.setAttribute('font-size', isBall ? '14' : '12');
           text.setAttribute('class', 'player-label'); 
+          if (isBall) text.style.textShadow = 'none'; // ボールは影なしで見やすく
           text.textContent = player.label;
           group.appendChild(text);
 
-          // イベント登録
           group.addEventListener('mousedown', startPlayerDrag);
           group.addEventListener('touchstart', startPlayerDrag, { passive: false });
           
@@ -417,7 +446,7 @@
       function startPlayerDrag(evt) {
         if (mode !== 'move') return;
         evt.preventDefault();
-        evt.stopPropagation(); // ペン描画イベントが発火しないようにする
+        evt.stopPropagation();
 
         dragStartTime = Date.now();
         const target = evt.currentTarget;
@@ -425,19 +454,17 @@
         if (!player) return;
 
         draggingElement = { 
-          group: target, 
-          id: player.id, 
-          player: player, 
-          isMoved: false 
+          group: target, id: player.id, player: player, isMoved: false 
         };
         
         const mousePos = getMousePosition(evt);
         offset.x = mousePos.x - player.x;
         offset.y = mousePos.y - player.y;
 
+        // ドラッグ中は少し透明にして浮かせる
         target.setAttribute('opacity', '0.8');
+        target.querySelector('circle').setAttribute('stroke-width', '3');
         
-        // ドラッグ中の要素を一番手前に表示
         playersLayer.appendChild(target);
       }
 
@@ -459,80 +486,62 @@
         if (!draggingElement) return;
         
         draggingElement.group.setAttribute('opacity', '100');
+        draggingElement.group.querySelector('circle').setAttribute('stroke-width', '2');
         
         const { id, player, isMoved } = draggingElement;
         draggingElement = null;
 
         const dragDuration = Date.now() - dragStartTime;
         
-        // クリック判定 (ほとんど動かさず、すぐに離した場合)
         if (!isMoved && dragDuration < 300) {
           openNameModal(id);
           return;
         }
 
-        // 削除判定 (コートの枠外にドロップされた場合、ボール以外は削除)
         if (player.team !== 'ball' && (player.x < -30 || player.x > 830 || player.y < -30 || player.y > 430)) {
           players = players.filter(p => p.id !== id);
           renderPlayers();
         }
       }
 
-      // ウィンドウ全体でドラッグ終了を検知
       window.addEventListener('mousemove', dragPlayer);
       window.addEventListener('touchmove', dragPlayer, { passive: false });
       window.addEventListener('mouseup', endPlayerDrag);
       window.addEventListener('touchend', endPlayerDrag);
 
       // ==========================================
-      // ヘッダーボタンの処理 (追加・初期化)
+      // ヘッダーボタンの処理
       // ==========================================
-      
       document.getElementById('reset-btn').addEventListener('click', () => {
-        // ディープコピーで初期化
         players = JSON.parse(JSON.stringify(defaultPlayers));
-        drawLayer.innerHTML = ''; // 描画した線も消す
+        drawLayer.innerHTML = ''; 
         renderPlayers();
       });
       
       document.getElementById('add-a-btn').addEventListener('click', () => { 
-        players.push({ 
-          id: `new_${nextId++}`, 
-          team: 'A', 
-          label: '+', 
-          x: 400 + (Math.random() * 40 - 20), 
-          y: 200 + (Math.random() * 40 - 20) 
-        }); 
+        players.push({ id: `new_${nextId++}`, team: 'A', label: '+', x: 400 + (Math.random() * 40 - 20), y: 200 + (Math.random() * 40 - 20) }); 
         renderPlayers(); 
       });
       
       document.getElementById('add-b-btn').addEventListener('click', () => { 
-        players.push({ 
-          id: `new_${nextId++}`, 
-          team: 'B', 
-          label: '+', 
-          x: 400 + (Math.random() * 40 - 20), 
-          y: 200 + (Math.random() * 40 - 20) 
-        }); 
+        players.push({ id: `new_${nextId++}`, team: 'B', label: '+', x: 400 + (Math.random() * 40 - 20), y: 200 + (Math.random() * 40 - 20) }); 
         renderPlayers(); 
       });
 
       // ==========================================
       // 名前変更モーダルの処理
       // ==========================================
-      
       const modal = document.getElementById('name-modal');
       const nameInput = document.getElementById('name-input');
       
       function openNameModal(id) {
         const player = players.find(p => p.id === id);
-        if (!player || player.team === 'ball') return; // ボールは変更不可
+        if (!player || player.team === 'ball') return;
         
         editingPlayerId = id; 
         nameInput.value = player.label; 
         modal.classList.remove('hidden'); 
         
-        // モーダル表示アニメーション完了後にフォーカスを当てる
         setTimeout(() => {
           nameInput.focus();
           nameInput.select();
@@ -548,7 +557,6 @@
         if (editingPlayerId) {
           const player = players.find(p => p.id === editingPlayerId);
           if (player) { 
-            // 空白の場合は半角スペースを入れる（SVG描画エラー回避のため）
             player.label = nameInput.value.trim() || ' '; 
             renderPlayers(); 
           }
@@ -558,18 +566,12 @@
       
       document.getElementById('modal-cancel').addEventListener('click', closeModal);
       document.getElementById('modal-save').addEventListener('click', saveName);
-      
-      // Enterキーで保存、Escapeキーでキャンセル
       nameInput.addEventListener('keydown', (e) => { 
         if (e.key === 'Enter') saveName(); 
         if (e.key === 'Escape') closeModal(); 
       });
 
-      // ==========================================
-      // アプリケーション初期化
-      // ==========================================
-      
-      // 初期状態のセットアップ
+      // 初期起動
       players = JSON.parse(JSON.stringify(defaultPlayers));
       renderPlayers();
       
