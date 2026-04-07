@@ -45,7 +45,7 @@
 
     /* 🌟 アニメーション再生時のトランジション（滑らかな移動） */
     .animating-piece {
-      transition: transform 1s cubic-bezier(0.4, 0, 0.2, 1);
+      transition: transform 1.2s ease-in-out;
     }
   </style>
 </head>
@@ -392,8 +392,8 @@
             }
           }
 
-          // 位置の更新（アニメーション中はここでCSSトランジションが発動する）
-          group.setAttribute('transform', `translate(${player.x}, ${player.y})`);
+          // 🌟 スーッと動かすために、属性ではなくCSSの style.transform を使用する
+          group.style.transform = `translate(${player.x}px, ${player.y}px)`;
         });
       }
 
@@ -426,7 +426,9 @@
         
         draggingElement.player.x = newX;
         draggingElement.player.y = newY;
-        draggingElement.group.setAttribute('transform', `translate(${newX}, ${newY})`);
+        
+        // 🌟 ドラッグ時も style.transform を使用
+        draggingElement.group.style.transform = `translate(${newX}px, ${newY}px)`;
       }
 
       function endPlayerDrag(evt) {
@@ -500,8 +502,9 @@
         players = JSON.parse(JSON.stringify(scenes[0]));
         renderPlayers();
         
-        // ブラウザの描画を待つ
-        await new Promise(resolve => setTimeout(resolve, 50));
+        // ★重要：ブラウザの描画を強制し、初期位置を確定させる（これがないと瞬間移動になる）
+        void document.body.offsetHeight;
+        await new Promise(resolve => requestAnimationFrame(resolve));
 
         // トランジション（アニメーションCSS）を付与
         const activeGroups = document.querySelectorAll('.piece-group');
@@ -509,10 +512,10 @@
 
         // シーン2以降を順番に再生
         for (let i = 1; i < scenes.length; i++) {
-          await new Promise(resolve => setTimeout(resolve, 500)); // 動き出す前のタメ（0.5秒）
+          await new Promise(resolve => setTimeout(resolve, 300)); // 動き出す前のタメ
           players = JSON.parse(JSON.stringify(scenes[i]));
           renderPlayers(); // ここで座標が更新され、CSSにより滑らかに動く
-          await new Promise(resolve => setTimeout(resolve, 1000)); // 移動完了を待つ（1秒）
+          await new Promise(resolve => setTimeout(resolve, 1200)); // 移動完了を待つ（1.2秒）
         }
 
         // 再生完了後のクリーンアップ
