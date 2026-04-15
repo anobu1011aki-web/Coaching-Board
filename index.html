@@ -292,36 +292,36 @@
       // 🌟 初期配置データ（角度 "angle" を追加）
       // ==========================================
       const defaultPlayersFull = [
-        // 赤チーム(A)は初期で右を向く(90度)
-        { id: 'a1', team: 'A', label: 'GK', x: 20, y: 200, angle: 90 }, { id: 'a2', team: 'A', label: 'LW', x: 130, y: 60, angle: 90 },
-        { id: 'a3', team: 'A', label: 'LB', x: 150, y: 120, angle: 90 }, { id: 'a4', team: 'A', label: 'CB', x: 150, y: 200, angle: 90 },
-        { id: 'a5', team: 'A', label: 'RB', x: 150, y: 280, angle: 90 }, { id: 'a6', team: 'A', label: 'RW', x: 130, y: 340, angle: 90 },
-        { id: 'a7', team: 'A', label: 'PV', x: 130, y: 160, angle: 90 },
-        // 青チーム(B)は初期で左を向く(-90度)
-        { id: 'b1', team: 'B', label: 'GK', x: 780, y: 200, angle: -90 }, { id: 'b2', team: 'B', label: 'RW', x: 670, y: 40, angle: -90 },
-        { id: 'b3', team: 'B', label: 'RB', x: 650, y: 100, angle: -90 }, { id: 'b4', team: 'B', label: 'CB', x: 650, y: 200, angle: -90 },
-        { id: 'b5', team: 'B', label: 'LB', x: 650, y: 300, angle: -90 }, { id: 'b6', team: 'B', label: 'LW', x: 670, y: 360, angle: -90 },
-        { id: 'b7', team: 'B', label: 'PV', x: 670, y: 240, angle: -90 },
+        // 赤チーム(A)は初期で右を向く(-90度)
+        { id: 'a1', team: 'A', label: 'GK', x: 20, y: 200, angle: -90 }, { id: 'a2', team: 'A', label: 'LW', x: 130, y: 60, angle: -90 },
+        { id: 'a3', team: 'A', label: 'LB', x: 150, y: 120, angle: -90 }, { id: 'a4', team: 'A', label: 'CB', x: 150, y: 200, angle: -90 },
+        { id: 'a5', team: 'A', label: 'RB', x: 150, y: 280, angle: -90 }, { id: 'a6', team: 'A', label: 'RW', x: 130, y: 340, angle: -90 },
+        { id: 'a7', team: 'A', label: 'PV', x: 130, y: 160, angle: -90 },
+        // 青チーム(B)は初期で左を向く(90度)
+        { id: 'b1', team: 'B', label: 'GK', x: 780, y: 200, angle: 90 }, { id: 'b2', team: 'B', label: 'RW', x: 670, y: 40, angle: 90 },
+        { id: 'b3', team: 'B', label: 'RB', x: 650, y: 100, angle: 90 }, { id: 'b4', team: 'B', label: 'CB', x: 650, y: 200, angle: 90 },
+        { id: 'b5', team: 'B', label: 'LB', x: 650, y: 300, angle: 90 }, { id: 'b6', team: 'B', label: 'LW', x: 670, y: 360, angle: 90 },
+        { id: 'b7', team: 'B', label: 'PV', x: 670, y: 240, angle: 90 },
         { id: 'ball', team: 'ball', label: '⚽', x: 400, y: 200, angle: 0 }
       ];
 
       const defaultPlayersHalf = [
-        // 守備側（赤）は初期で下を向く(180度)
-        { id: 'a1', team: 'A', label: 'GK', x: 200, y: 20, angle: 180 },
-        { id: 'a2', team: 'A', label: 'LW', x: 70, y: 110, angle: 180 },
-        { id: 'a3', team: 'A', label: 'LB', x: 130, y: 130, angle: 180 },
-        { id: 'a4', team: 'A', label: 'CB', x: 200, y: 140, angle: 180 },
-        { id: 'a5', team: 'A', label: 'RB', x: 270, y: 130, angle: 180 },
-        { id: 'a6', team: 'A', label: 'RW', x: 330, y: 110, angle: 180 },
-        { id: 'a7', team: 'A', label: 'PV', x: 200, y: 110, angle: 180 },
-        // 攻撃側（青）は初期で上を向く(0度)
-        { id: 'b1', team: 'B', label: 'GK', x: 200, y: 380, angle: 0 },
-        { id: 'b2', team: 'B', label: 'LW', x: 40, y: 300, angle: 0 },
-        { id: 'b3', team: 'B', label: 'LB', x: 120, y: 250, angle: 0 },
-        { id: 'b4', team: 'B', label: 'CB', x: 200, y: 270, angle: 0 },
-        { id: 'b5', team: 'B', label: 'RB', x: 280, y: 250, angle: 0 },
-        { id: 'b6', team: 'B', label: 'RW', x: 360, y: 300, angle: 0 },
-        { id: 'b7', team: 'B', label: 'PV', x: 200, y: 160, angle: 0 },
+        // 守備側（赤）は初期で下を向く(0度)
+        { id: 'a1', team: 'A', label: 'GK', x: 200, y: 20, angle: 0 },
+        { id: 'a2', team: 'A', label: 'LW', x: 70, y: 110, angle: 0 },
+        { id: 'a3', team: 'A', label: 'LB', x: 130, y: 130, angle: 0 },
+        { id: 'a4', team: 'A', label: 'CB', x: 200, y: 140, angle: 0 },
+        { id: 'a5', team: 'A', label: 'RB', x: 270, y: 130, angle: 0 },
+        { id: 'a6', team: 'A', label: 'RW', x: 330, y: 110, angle: 0 },
+        { id: 'a7', team: 'A', label: 'PV', x: 200, y: 110, angle: 0 },
+        // 攻撃側（青）は初期で上を向く(180度)
+        { id: 'b1', team: 'B', label: 'GK', x: 200, y: 380, angle: 180 },
+        { id: 'b2', team: 'B', label: 'LW', x: 40, y: 300, angle: 180 },
+        { id: 'b3', team: 'B', label: 'LB', x: 120, y: 250, angle: 180 },
+        { id: 'b4', team: 'B', label: 'CB', x: 200, y: 270, angle: 180 },
+        { id: 'b5', team: 'B', label: 'RB', x: 280, y: 250, angle: 180 },
+        { id: 'b6', team: 'B', label: 'RW', x: 360, y: 300, angle: 180 },
+        { id: 'b7', team: 'B', label: 'PV', x: 200, y: 160, angle: 180 },
         { id: 'ball', team: 'ball', label: '⚽', x: 200, y: 240, angle: 0 }
       ];
 
@@ -513,18 +513,39 @@
                 bodyGroup.setAttribute('transform', `rotate(${player.angle})`);
               }
 
-              // 🌟 「足」の追加（ボール以外）
+              // 🌟 「手」と「足」の追加（ボール以外）
               if (!isBall) {
-                // 左足
-                const leftFoot = document.createElementNS('http://www.w3.org/2000/svg', 'ellipse');
-                leftFoot.setAttribute('cx', '-7'); leftFoot.setAttribute('cy', '15'); leftFoot.setAttribute('rx', '5'); leftFoot.setAttribute('ry', '8');
-                leftFoot.setAttribute('fill', '#1f2937'); // ダークグレーの靴
-                bodyGroup.appendChild(leftFoot);
-                // 右足
-                const rightFoot = document.createElementNS('http://www.w3.org/2000/svg', 'ellipse');
-                rightFoot.setAttribute('cx', '7'); rightFoot.setAttribute('cy', '15'); rightFoot.setAttribute('rx', '5'); rightFoot.setAttribute('ry', '8');
-                rightFoot.setAttribute('fill', '#1f2937');
-                bodyGroup.appendChild(rightFoot);
+                const isGK = player.label.toUpperCase() === 'GK';
+                
+                if (isGK) {
+                  // GKは「手（グローブ）」を前方に広げている表現
+                  const leftHand = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+                  leftHand.setAttribute('cx', '-15'); leftHand.setAttribute('cy', '11'); leftHand.setAttribute('r', '6');
+                  leftHand.setAttribute('fill', '#e5e7eb'); // 明るいグレー
+                  leftHand.setAttribute('stroke', '#374151'); // 暗いグレーの枠線
+                  leftHand.setAttribute('stroke-width', '1.5');
+                  bodyGroup.appendChild(leftHand);
+
+                  const rightHand = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+                  rightHand.setAttribute('cx', '15'); rightHand.setAttribute('cy', '11'); rightHand.setAttribute('r', '6');
+                  rightHand.setAttribute('fill', '#e5e7eb');
+                  rightHand.setAttribute('stroke', '#374151');
+                  rightHand.setAttribute('stroke-width', '1.5');
+                  bodyGroup.appendChild(rightHand);
+                } else {
+                  // フィールドプレイヤーは斜め「ハの字」の足
+                  const leftFoot = document.createElementNS('http://www.w3.org/2000/svg', 'ellipse');
+                  leftFoot.setAttribute('cx', '-10'); leftFoot.setAttribute('cy', '13'); leftFoot.setAttribute('rx', '5'); leftFoot.setAttribute('ry', '8');
+                  leftFoot.setAttribute('fill', '#1f2937'); // ダークグレーの靴
+                  leftFoot.setAttribute('transform', 'rotate(40, -10, 13)');
+                  bodyGroup.appendChild(leftFoot);
+
+                  const rightFoot = document.createElementNS('http://www.w3.org/2000/svg', 'ellipse');
+                  rightFoot.setAttribute('cx', '10'); rightFoot.setAttribute('cy', '13'); rightFoot.setAttribute('rx', '5'); rightFoot.setAttribute('ry', '8');
+                  rightFoot.setAttribute('fill', '#1f2937');
+                  rightFoot.setAttribute('transform', 'rotate(-40, 10, 13)');
+                  bodyGroup.appendChild(rightFoot);
+                }
               }
 
               // 体（円）の描画
@@ -605,7 +626,8 @@
           const dy = newY - draggingElement.player.y;
           // 少しでも動いたら角度を更新
           if (Math.abs(dx) > 0.5 || Math.abs(dy) > 0.5) {
-            draggingElement.player.angle = Math.atan2(dy, dx) * (180 / Math.PI) + 90;
+            // 進行方向に正しく向くように計算式を修正 (-90度に)
+            draggingElement.player.angle = Math.atan2(dy, dx) * (180 / Math.PI) - 90;
             const bodyEl = draggingElement.group.querySelector('.body-rotation');
             if (bodyEl) bodyEl.setAttribute('transform', `rotate(${draggingElement.player.angle})`);
           }
@@ -794,13 +816,13 @@
       document.getElementById('add-a-btn').addEventListener('click', () => { 
         const isHalf = document.getElementById('view-select').value === 'half';
         const p = getAddPosition(); 
-        players.push({ id: `new_${nextId++}`, team: 'A', label: '+', x: p.x, y: p.y, angle: isHalf ? 180 : 90 }); 
+        players.push({ id: `new_${nextId++}`, team: 'A', label: '+', x: p.x, y: p.y, angle: isHalf ? 0 : -90 }); 
         renderPlayers(); 
       });
       document.getElementById('add-b-btn').addEventListener('click', () => { 
         const isHalf = document.getElementById('view-select').value === 'half';
         const p = getAddPosition(); 
-        players.push({ id: `new_${nextId++}`, team: 'B', label: '+', x: p.x, y: p.y, angle: isHalf ? 0 : -90 }); 
+        players.push({ id: `new_${nextId++}`, team: 'B', label: '+', x: p.x, y: p.y, angle: isHalf ? 180 : 90 }); 
         renderPlayers(); 
       });
       document.getElementById('add-cone-btn').addEventListener('click', () => { const p = getAddPosition(); players.push({ id: `new_${nextId++}`, team: 'cone', label: '', x: p.x, y: p.y }); renderPlayers(); });
