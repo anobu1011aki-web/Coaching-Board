@@ -130,7 +130,7 @@
   <!-- 🌟 作戦ボードエリア -->
   <main class="flex-grow relative w-full bg-[#2b3e50] overflow-hidden flex items-center justify-center" id="svg-container">
     
-    <!-- SVGキャンバス (🌟 viewBox を調整し、コートを最大限に拡大表示) -->
+    <!-- SVGキャンバス -->
     <svg id="board" viewBox="-25 -15 850 430" preserveAspectRatio="xMidYMid meet" class="w-full h-full max-h-full object-contain block transition-all duration-500 touch-none drop-shadow-lg">
       <defs>
         <clipPath id="court-clip-full">
@@ -289,43 +289,42 @@
       });
 
       // ==========================================
-      // 🌟 初期配置データ（フルコート用 / ハーフコート用）
+      // 🌟 初期配置データ（角度 "angle" を追加）
       // ==========================================
       const defaultPlayersFull = [
-        { id: 'a1', team: 'A', label: 'GK', x: 20, y: 200 }, { id: 'a2', team: 'A', label: 'LW', x: 130, y: 60 },
-        { id: 'a3', team: 'A', label: 'LB', x: 150, y: 120 }, { id: 'a4', team: 'A', label: 'CB', x: 150, y: 200 },
-        { id: 'a5', team: 'A', label: 'RB', x: 150, y: 280 }, { id: 'a6', team: 'A', label: 'RW', x: 130, y: 340 },
-        { id: 'a7', team: 'A', label: 'PV', x: 130, y: 160 },
-        { id: 'b1', team: 'B', label: 'GK', x: 780, y: 200 }, { id: 'b2', team: 'B', label: 'RW', x: 670, y: 40 },
-        { id: 'b3', team: 'B', label: 'RB', x: 650, y: 100 }, { id: 'b4', team: 'B', label: 'CB', x: 650, y: 200 },
-        { id: 'b5', team: 'B', label: 'LB', x: 650, y: 300 }, { id: 'b6', team: 'B', label: 'LW', x: 670, y: 360 },
-        { id: 'b7', team: 'B', label: 'PV', x: 670, y: 240 },
-        { id: 'ball', team: 'ball', label: '⚽', x: 400, y: 200 }
+        // 赤チーム(A)は初期で右を向く(90度)
+        { id: 'a1', team: 'A', label: 'GK', x: 20, y: 200, angle: 90 }, { id: 'a2', team: 'A', label: 'LW', x: 130, y: 60, angle: 90 },
+        { id: 'a3', team: 'A', label: 'LB', x: 150, y: 120, angle: 90 }, { id: 'a4', team: 'A', label: 'CB', x: 150, y: 200, angle: 90 },
+        { id: 'a5', team: 'A', label: 'RB', x: 150, y: 280, angle: 90 }, { id: 'a6', team: 'A', label: 'RW', x: 130, y: 340, angle: 90 },
+        { id: 'a7', team: 'A', label: 'PV', x: 130, y: 160, angle: 90 },
+        // 青チーム(B)は初期で左を向く(-90度)
+        { id: 'b1', team: 'B', label: 'GK', x: 780, y: 200, angle: -90 }, { id: 'b2', team: 'B', label: 'RW', x: 670, y: 40, angle: -90 },
+        { id: 'b3', team: 'B', label: 'RB', x: 650, y: 100, angle: -90 }, { id: 'b4', team: 'B', label: 'CB', x: 650, y: 200, angle: -90 },
+        { id: 'b5', team: 'B', label: 'LB', x: 650, y: 300, angle: -90 }, { id: 'b6', team: 'B', label: 'LW', x: 670, y: 360, angle: -90 },
+        { id: 'b7', team: 'B', label: 'PV', x: 670, y: 240, angle: -90 },
+        { id: 'ball', team: 'ball', label: '⚽', x: 400, y: 200, angle: 0 }
       ];
 
-      // ハーフコート時は、上部(ゴール側)が赤(DF)、下部(センター側)が青(OF)
       const defaultPlayersHalf = [
-        // 守備側（赤）
-        { id: 'a1', team: 'A', label: 'GK', x: 200, y: 20 },
-        { id: 'a2', team: 'A', label: 'LW', x: 70, y: 110 },
-        { id: 'a3', team: 'A', label: 'LB', x: 130, y: 130 },
-        { id: 'a4', team: 'A', label: 'CB', x: 200, y: 140 },
-        { id: 'a5', team: 'A', label: 'RB', x: 270, y: 130 },
-        { id: 'a6', team: 'A', label: 'RW', x: 330, y: 110 },
-        { id: 'a7', team: 'A', label: 'PV', x: 200, y: 110 },
-        // 攻撃側（青）
-        { id: 'b1', team: 'B', label: 'GK', x: 200, y: 380 },
-        { id: 'b2', team: 'B', label: 'LW', x: 40, y: 300 },
-        { id: 'b3', team: 'B', label: 'LB', x: 120, y: 250 },
-        { id: 'b4', team: 'B', label: 'CB', x: 200, y: 270 },
-        { id: 'b5', team: 'B', label: 'RB', x: 280, y: 250 },
-        { id: 'b6', team: 'B', label: 'RW', x: 360, y: 300 },
-        { id: 'b7', team: 'B', label: 'PV', x: 200, y: 160 },
-        // ボール
-        { id: 'ball', team: 'ball', label: '⚽', x: 200, y: 240 }
+        // 守備側（赤）は初期で下を向く(180度)
+        { id: 'a1', team: 'A', label: 'GK', x: 200, y: 20, angle: 180 },
+        { id: 'a2', team: 'A', label: 'LW', x: 70, y: 110, angle: 180 },
+        { id: 'a3', team: 'A', label: 'LB', x: 130, y: 130, angle: 180 },
+        { id: 'a4', team: 'A', label: 'CB', x: 200, y: 140, angle: 180 },
+        { id: 'a5', team: 'A', label: 'RB', x: 270, y: 130, angle: 180 },
+        { id: 'a6', team: 'A', label: 'RW', x: 330, y: 110, angle: 180 },
+        { id: 'a7', team: 'A', label: 'PV', x: 200, y: 110, angle: 180 },
+        // 攻撃側（青）は初期で上を向く(0度)
+        { id: 'b1', team: 'B', label: 'GK', x: 200, y: 380, angle: 0 },
+        { id: 'b2', team: 'B', label: 'LW', x: 40, y: 300, angle: 0 },
+        { id: 'b3', team: 'B', label: 'LB', x: 120, y: 250, angle: 0 },
+        { id: 'b4', team: 'B', label: 'CB', x: 200, y: 270, angle: 0 },
+        { id: 'b5', team: 'B', label: 'RB', x: 280, y: 250, angle: 0 },
+        { id: 'b6', team: 'B', label: 'RW', x: 360, y: 300, angle: 0 },
+        { id: 'b7', team: 'B', label: 'PV', x: 200, y: 160, angle: 0 },
+        { id: 'ball', team: 'ball', label: '⚽', x: 200, y: 240, angle: 0 }
       ];
 
-      // 🌟 表示モード切り替え（viewBoxの設定を調整してコートを最大化）
       viewSelect.addEventListener('change', (e) => {
         const val = e.target.value;
         if (val === 'full') {
@@ -334,14 +333,12 @@
           document.getElementById('court-half').style.display = 'none';
           players = JSON.parse(JSON.stringify(defaultPlayersFull));
         } else if (val === 'half') {
-          // ハーフコート時に画面いっぱいに広がるように数値を絞り込み
           svg.setAttribute('viewBox', '-15 -25 430 440');
           document.getElementById('court-full').style.display = 'none';
           document.getElementById('court-half').style.display = 'block';
           players = JSON.parse(JSON.stringify(defaultPlayersHalf));
         }
         
-        // 状態のリセット
         drawLayer.innerHTML = ''; 
         scenes = []; 
         document.getElementById('scene-count').textContent = '0';
@@ -501,18 +498,51 @@
               group.appendChild(circle);
             } else {
               const isBall = player.team === 'ball';
-              const radius = isBall ? 10 : 16;
+              // 🌟 3文字でも収まりやすいように、少しだけコマを大きく (16 -> 18)
+              const radius = isBall ? 10 : 18; 
               let fill = '#ef4444'; if (isBall) fill = '#fde047'; else if (player.team === 'B') fill = '#3b82f6';
               
               const shadow = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
-              shadow.setAttribute('r', radius); shadow.setAttribute('cy', '2'); shadow.setAttribute('fill', 'rgba(0,0,0,0.3)');
+              shadow.setAttribute('r', radius); shadow.setAttribute('cy', '3'); shadow.setAttribute('fill', 'rgba(0,0,0,0.3)');
               group.appendChild(shadow);
+
+              // 🌟 体と足を回転させるためのグループ
+              const bodyGroup = document.createElementNS('http://www.w3.org/2000/svg', 'g');
+              bodyGroup.setAttribute('class', 'body-rotation');
+              if (player.angle !== undefined) {
+                bodyGroup.setAttribute('transform', `rotate(${player.angle})`);
+              }
+
+              // 🌟 「足」の追加（ボール以外）
+              if (!isBall) {
+                // 左足
+                const leftFoot = document.createElementNS('http://www.w3.org/2000/svg', 'ellipse');
+                leftFoot.setAttribute('cx', '-7'); leftFoot.setAttribute('cy', '15'); leftFoot.setAttribute('rx', '5'); leftFoot.setAttribute('ry', '8');
+                leftFoot.setAttribute('fill', '#1f2937'); // ダークグレーの靴
+                bodyGroup.appendChild(leftFoot);
+                // 右足
+                const rightFoot = document.createElementNS('http://www.w3.org/2000/svg', 'ellipse');
+                rightFoot.setAttribute('cx', '7'); rightFoot.setAttribute('cy', '15'); rightFoot.setAttribute('rx', '5'); rightFoot.setAttribute('ry', '8');
+                rightFoot.setAttribute('fill', '#1f2937');
+                bodyGroup.appendChild(rightFoot);
+              }
+
+              // 体（円）の描画
               const circle = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
               circle.setAttribute('r', radius); circle.setAttribute('fill', fill); circle.setAttribute('stroke', 'white'); circle.setAttribute('stroke-width', '2');
-              group.appendChild(circle);
+              bodyGroup.appendChild(circle);
+
+              group.appendChild(bodyGroup);
+
+              // 🌟 名前テキストの描画（体と一緒に回転しないように外側に配置）
               const text = document.createElementNS('http://www.w3.org/2000/svg', 'text');
-              text.setAttribute('x', '0'); text.setAttribute('y', '4'); text.setAttribute('text-anchor', 'middle');
-              text.setAttribute('fill', isBall ? 'black' : 'white'); text.setAttribute('font-size', isBall ? '14' : '12');
+              text.setAttribute('x', '0'); 
+              text.setAttribute('y', '4.5'); // 上下中央に微調整
+              text.setAttribute('text-anchor', 'middle');
+              text.setAttribute('fill', isBall ? 'black' : 'white'); 
+              // 🌟 3文字でもはみ出ないようにフォントサイズと文字間隔を調整
+              text.setAttribute('font-size', isBall ? '14' : '13');
+              text.setAttribute('letter-spacing', '-0.5');
               text.setAttribute('class', 'player-label'); 
               text.textContent = player.label;
               group.appendChild(text);
@@ -524,6 +554,11 @@
             const textEl = group.querySelector('.player-label');
             if (textEl && player.team !== 'cone' && player.team !== 'marker' && player.team !== 'df-node') {
               textEl.textContent = player.label;
+            }
+            // 🌟 角度が更新されていれば図形を回転させる
+            const bodyEl = group.querySelector('.body-rotation');
+            if (bodyEl && player.angle !== undefined) {
+              bodyEl.setAttribute('transform', `rotate(${player.angle})`);
             }
           }
 
@@ -563,6 +598,18 @@
         const mousePos = getMousePosition(evt);
         const newX = mousePos.x - offset.x;
         const newY = mousePos.y - offset.y;
+
+        // 🌟 ドラッグした方向（進行方向）を計算し、体を自動的にその方向へ向かせる
+        if (draggingElement.player.team === 'A' || draggingElement.player.team === 'B') {
+          const dx = newX - draggingElement.player.x;
+          const dy = newY - draggingElement.player.y;
+          // 少しでも動いたら角度を更新
+          if (Math.abs(dx) > 0.5 || Math.abs(dy) > 0.5) {
+            draggingElement.player.angle = Math.atan2(dy, dx) * (180 / Math.PI) + 90;
+            const bodyEl = draggingElement.group.querySelector('.body-rotation');
+            if (bodyEl) bodyEl.setAttribute('transform', `rotate(${draggingElement.player.angle})`);
+          }
+        }
         
         draggingElement.player.x = newX;
         draggingElement.player.y = newY;
@@ -617,7 +664,7 @@
           renderPlayers();
         }
 
-        // 枠外判定（少し広めに判定）
+        // 枠外判定
         if (player.team !== 'ball' && (player.x < -60 || player.x > 860 || player.y < -60 || player.y > 460)) {
           if (player.team === 'df-node') {
             players = players.filter(p => p.groupId !== player.groupId);
@@ -696,8 +743,17 @@
                 const startP = startScene.find(sp => sp.id === p.id);
                 const endP = endScene.find(ep => ep.id === p.id);
                 if (startP && endP) {
+                  // 座標の補間
                   p.x = startP.x + (endP.x - startP.x) * ease;
                   p.y = startP.y + (endP.y - startP.y) * ease;
+                  
+                  // 🌟 角度（向き）の滑らかな補間（最短距離で回転）
+                  if (startP.angle !== undefined && endP.angle !== undefined) {
+                    let diff = (endP.angle - startP.angle) % 360;
+                    if (diff > 180) diff -= 360;
+                    if (diff < -180) diff += 360;
+                    p.angle = startP.angle + diff * ease;
+                  }
                 }
               });
               
@@ -727,7 +783,6 @@
         renderPlayers();
       });
       
-      // 新しいコマを追加する位置も、フルコート/ハーフコートで中心座標を変える
       function getAddPosition() {
         const isHalf = document.getElementById('view-select').value === 'half';
         return {
@@ -736,8 +791,18 @@
         };
       }
 
-      document.getElementById('add-a-btn').addEventListener('click', () => { const p = getAddPosition(); players.push({ id: `new_${nextId++}`, team: 'A', label: '+', x: p.x, y: p.y }); renderPlayers(); });
-      document.getElementById('add-b-btn').addEventListener('click', () => { const p = getAddPosition(); players.push({ id: `new_${nextId++}`, team: 'B', label: '+', x: p.x, y: p.y }); renderPlayers(); });
+      document.getElementById('add-a-btn').addEventListener('click', () => { 
+        const isHalf = document.getElementById('view-select').value === 'half';
+        const p = getAddPosition(); 
+        players.push({ id: `new_${nextId++}`, team: 'A', label: '+', x: p.x, y: p.y, angle: isHalf ? 180 : 90 }); 
+        renderPlayers(); 
+      });
+      document.getElementById('add-b-btn').addEventListener('click', () => { 
+        const isHalf = document.getElementById('view-select').value === 'half';
+        const p = getAddPosition(); 
+        players.push({ id: `new_${nextId++}`, team: 'B', label: '+', x: p.x, y: p.y, angle: isHalf ? 0 : -90 }); 
+        renderPlayers(); 
+      });
       document.getElementById('add-cone-btn').addEventListener('click', () => { const p = getAddPosition(); players.push({ id: `new_${nextId++}`, team: 'cone', label: '', x: p.x, y: p.y }); renderPlayers(); });
       document.getElementById('add-marker-btn').addEventListener('click', () => { const p = getAddPosition(); players.push({ id: `new_${nextId++}`, team: 'marker', label: '', x: p.x, y: p.y }); renderPlayers(); });
       
