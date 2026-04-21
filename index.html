@@ -41,7 +41,7 @@
       <div class="flex items-center gap-1 shrink-0">
         <button id="add-a-btn" class="px-1.5 py-1 bg-red-100 text-red-700 rounded text-xs font-bold shadow-sm border border-red-200">+赤</button>
         <button id="add-b-btn" class="px-1.5 py-1 bg-blue-100 text-blue-700 rounded text-xs font-bold shadow-sm border border-blue-200">+青</button>
-        <button id="add-df-line-btn" class="px-1.5 py-1 bg-indigo-100 text-indigo-700 rounded text-xs font-bold shadow-sm border border-indigo-200">+線</button>
+        <button id="add-df-line-btn" class="px-1.5 py-1 bg-indigo-100 text-indigo-700 rounded text-xs font-bold shadow-sm border border-indigo-200">+DFライン</button>
         <button id="add-cone-btn" class="px-1.5 py-1 bg-orange-100 text-orange-700 rounded text-xs font-bold shadow-sm border border-orange-200">+🔺</button>
         <button id="add-marker-btn" class="px-1.5 py-1 bg-yellow-100 text-yellow-700 rounded text-xs font-bold shadow-sm border border-yellow-300">+🟡</button>
         <button id="reset-btn" class="px-1.5 py-1 bg-gray-100 text-gray-700 rounded text-xs font-bold shadow-sm border border-gray-300 ml-0.5">初期化</button>
@@ -92,6 +92,21 @@
           <stop offset="0%" stop-color="#f5b87f" />
           <stop offset="100%" stop-color="#e09e5a" />
         </linearGradient>
+
+        <!-- カラーコーン用グラデーション -->
+        <linearGradient id="coneGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+          <stop offset="0%" stop-color="#fdba74" />
+          <stop offset="20%" stop-color="#f97316" />
+          <stop offset="80%" stop-color="#ea580c" />
+          <stop offset="100%" stop-color="#9a3412" />
+        </linearGradient>
+
+        <!-- マーカー用グラデーション -->
+        <radialGradient id="markerGrad" cx="35%" cy="35%" r="65%">
+          <stop offset="0%" stop-color="#fef08a" />
+          <stop offset="50%" stop-color="#eab308" />
+          <stop offset="100%" stop-color="#a16207" />
+        </radialGradient>
 
         <marker id="arrow-red" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
           <path d="M 0 2 L 10 5 L 0 8 L 2.5 5 z" fill="#ef4444" />
@@ -335,10 +350,10 @@
 
       function endDraw(evt) { if (isDrawing) { isDrawing = false; currentPath = null; } }
 
-      svg.addEventListener('mousedown', (e) => { if (!['circle', 'polygon', 'text', 'g'].includes(e.target.tagName)) startDraw(e); });
+      svg.addEventListener('mousedown', (e) => { if (!['circle', 'polygon', 'text', 'g', 'path', 'ellipse', 'rect'].includes(e.target.tagName)) startDraw(e); });
       svg.addEventListener('mousemove', drawPath);
       window.addEventListener('mouseup', endDraw);
-      svg.addEventListener('touchstart', (e) => { if (e.touches.length === 1 && !['circle', 'polygon', 'text', 'g'].includes(e.target.tagName)) startDraw(e); }, { passive: false });
+      svg.addEventListener('touchstart', (e) => { if (e.touches.length === 1 && !['circle', 'polygon', 'text', 'g', 'path', 'ellipse', 'rect'].includes(e.target.tagName)) startDraw(e); }, { passive: false });
       svg.addEventListener('touchmove', (e) => { if (e.touches.length === 1 && isDrawing) drawPath(e); }, { passive: false });
       window.addEventListener('touchend', endDraw);
 
@@ -399,22 +414,54 @@
             group.dataset.id = player.id;
 
             if (player.team === 'cone') {
+              // コーンの影
               const shadow = document.createElementNS('http://www.w3.org/2000/svg', 'ellipse');
-              shadow.setAttribute('rx', '12'); shadow.setAttribute('ry', '4'); shadow.setAttribute('cy', '12'); shadow.setAttribute('fill', 'rgba(0,0,0,0.3)');
+              shadow.setAttribute('rx', '14'); shadow.setAttribute('ry', '6'); shadow.setAttribute('cy', '10'); shadow.setAttribute('fill', 'rgba(0,0,0,0.3)');
               group.appendChild(shadow);
-              const polygon = document.createElementNS('http://www.w3.org/2000/svg', 'polygon');
-              polygon.setAttribute('points', '-10,12 10,12 0,-12'); polygon.setAttribute('fill', '#f97316'); polygon.setAttribute('stroke', 'white'); polygon.setAttribute('stroke-width', '2');
-              group.appendChild(polygon);
+
+              // コーンの土台
+              const base = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
+              base.setAttribute('x', '-11'); base.setAttribute('y', '6'); base.setAttribute('width', '22'); base.setAttribute('height', '5'); base.setAttribute('rx', '2'); base.setAttribute('fill', '#c2410c');
+              group.appendChild(base);
+
+              // コーンの本体（立体的なグラデーション）
+              const body = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+              body.setAttribute('d', 'M -8 8 L 8 8 L 2 -12 Q 0 -14 -2 -12 Z');
+              body.setAttribute('fill', 'url(#coneGrad)');
+              group.appendChild(body);
+
+              // コーンの白い反射テープ
+              const tape = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+              tape.setAttribute('d', 'M -5.5 -1 L 5.5 -1 L 4.5 -5 L -4.5 -5 Z');
+              tape.setAttribute('fill', 'rgba(255,255,255,0.9)');
+              group.appendChild(tape);
+              
+              // コーンの頂点
+              const tip = document.createElementNS('http://www.w3.org/2000/svg', 'ellipse');
+              tip.setAttribute('cx', '0'); tip.setAttribute('cy', '-12'); tip.setAttribute('rx', '2'); tip.setAttribute('ry', '1'); tip.setAttribute('fill', '#fdba74');
+              group.appendChild(tip);
+              
             } else if (player.team === 'marker') {
+              // マーカーの影
               const shadow = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
-              shadow.setAttribute('r', '10'); shadow.setAttribute('cy', '2'); shadow.setAttribute('fill', 'rgba(0,0,0,0.3)');
+              shadow.setAttribute('r', '13'); shadow.setAttribute('cy', '2'); shadow.setAttribute('fill', 'rgba(0,0,0,0.3)');
               group.appendChild(shadow);
-              const circle = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
-              circle.setAttribute('r', '10'); circle.setAttribute('fill', '#eab308'); circle.setAttribute('stroke', 'white'); circle.setAttribute('stroke-width', '2');
-              group.appendChild(circle);
-              const innerCircle = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
-              innerCircle.setAttribute('r', '3'); innerCircle.setAttribute('fill', 'none'); innerCircle.setAttribute('stroke', 'white'); innerCircle.setAttribute('stroke-width', '1.5');
-              group.appendChild(innerCircle);
+
+              // マーカーの本体（立体的なグラデーション）
+              const outer = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+              outer.setAttribute('r', '13'); outer.setAttribute('fill', 'url(#markerGrad)');
+              group.appendChild(outer);
+
+              // マーカー中央の穴（暗い部分）
+              const hole = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+              hole.setAttribute('r', '3'); hole.setAttribute('fill', 'rgba(0,0,0,0.5)');
+              group.appendChild(hole);
+
+              // マーカー中央の穴のフチ（ハイライト）
+              const holeRim = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+              holeRim.setAttribute('r', '4'); holeRim.setAttribute('fill', 'none'); holeRim.setAttribute('stroke', '#fef08a'); holeRim.setAttribute('stroke-width', '1');
+              group.appendChild(holeRim);
+              
             } else if (player.team === 'df-node') {
               const hitArea = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
               hitArea.setAttribute('r', '16'); hitArea.setAttribute('fill', 'transparent'); 
