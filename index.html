@@ -24,11 +24,9 @@
 </head>
 <body class="bg-gray-100 h-screen w-screen overflow-hidden flex flex-col font-sans text-gray-800 touch-none select-none">
 
-  <!-- ヘッダーエリア -->
   <header class="bg-white shadow-sm z-20 flex-shrink-0 border-b border-gray-200">
     <div class="px-1 py-1 flex items-center justify-start gap-1 overflow-x-auto hide-scrollbar whitespace-nowrap responsive-header">
       
-      <!-- 表示切り替え（縦向きコートを追加） -->
       <select id="view-select" class="text-xs bg-gray-100 border border-gray-300 rounded px-1 py-1 font-bold text-gray-700 focus:outline-none cursor-pointer shrink-0">
         <option value="full-h">フル(横)</option>
         <option value="full-v">フル(縦)</option>
@@ -37,7 +35,6 @@
 
       <div class="w-px h-4 bg-gray-300 mx-0.5 shrink-0 separator"></div>
 
-      <!-- 駒・アイテムの追加・初期化ボタン -->
       <div class="flex items-center gap-1 shrink-0">
         <button id="add-a-btn" class="px-1.5 py-1 bg-red-100 text-red-700 rounded text-xs font-bold shadow-sm border border-red-200">+赤</button>
         <button id="add-b-btn" class="px-1.5 py-1 bg-blue-100 text-blue-700 rounded text-xs font-bold shadow-sm border border-blue-200">+青</button>
@@ -49,7 +46,6 @@
 
       <div class="w-px h-4 bg-gray-300 mx-0.5 shrink-0 separator"></div>
 
-      <!-- モード切り替え（移動・ペン） -->
       <div class="flex items-center gap-1 bg-gray-50 p-0.5 rounded border border-gray-200 shrink-0">
         <button id="mode-move" class="tool-btn active px-1.5 py-1 bg-white border border-gray-300 rounded text-xs font-bold flex items-center">👆</button>
         <button id="mode-draw-red" class="tool-btn px-1.5 py-1 bg-white border border-gray-300 rounded flex items-center justify-center" title="赤ペン">
@@ -59,12 +55,11 @@
           <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#3b82f6" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21.174 6.812a1 1 0 0 0-3.986-3.987L3.842 16.174a2 2 0 0 0-.5.83l-1.321 4.352a.5.5 0 0 0 .623.622l4.353-1.32a2 2 0 0 0 .83-.497z"/><path d="m15 5 4 4"/></svg>
         </button>
         <div class="w-px h-4 bg-gray-300 mx-0.5"></div>
-        <button id="clear-lines-btn" class="px-1.5 py-1 bg-gray-200 text-gray-700 rounded text-xs font-bold">🗑️</button>
+        <button id="clear-lines-btn" class="px-1.5 py-1 bg-gray-200 text-gray-700 rounded text-xs font-bold">🗑️ 線消去</button>
       </div>
 
       <div class="w-px h-4 bg-gray-300 mx-0.5 shrink-0 separator"></div>
 
-      <!-- アニメーション動画コントロール -->
       <div class="flex items-center gap-1 bg-green-50 p-0.5 rounded border border-green-200 shrink-0 pr-2">
         <button id="record-scene-btn" class="px-1.5 py-1 bg-white border border-red-300 text-red-600 rounded text-[10px] font-bold shadow-sm flex items-center gap-0.5">
           ⏺ <span id="scene-count" class="bg-red-500 text-white px-1 py-0.5 rounded-full text-[9px] leading-none">0</span>
@@ -75,7 +70,6 @@
     </div>
   </header>
 
-  <!-- 作戦ボードエリア -->
   <main class="flex-grow relative w-full bg-[#2b3e50] overflow-hidden flex items-center justify-center" id="svg-container">
     <svg id="board" viewBox="-25 -15 850 430" preserveAspectRatio="xMidYMid meet" class="w-full h-full max-h-full object-contain block transition-all duration-500 touch-none drop-shadow-lg">
       <defs>
@@ -93,7 +87,6 @@
           <stop offset="100%" stop-color="#e09e5a" />
         </linearGradient>
 
-        <!-- カラーコーン用グラデーション -->
         <linearGradient id="coneGrad" x1="0%" y1="0%" x2="100%" y2="0%">
           <stop offset="0%" stop-color="#fdba74" />
           <stop offset="20%" stop-color="#f97316" />
@@ -101,7 +94,6 @@
           <stop offset="100%" stop-color="#9a3412" />
         </linearGradient>
 
-        <!-- マーカー用グラデーション -->
         <radialGradient id="markerGrad" cx="35%" cy="35%" r="65%">
           <stop offset="0%" stop-color="#fef08a" />
           <stop offset="50%" stop-color="#eab308" />
@@ -116,19 +108,16 @@
         </marker>
       </defs>
 
-      <!-- ＝＝＝＝＝ フルコート（横向き） ＝＝＝＝＝ -->
       <g id="court-full-h">
         <rect x="-100" y="-100" width="1000" height="600" fill="#2b3e50" />
         <rect x="0" y="0" width="800" height="400" fill="url(#courtGrad)" />
         <g clip-path="url(#court-clip-full-h)">
           <line x1="400" y1="0" x2="400" y2="400" stroke="white" stroke-width="3" />
           <circle cx="400" cy="200" r="40" fill="none" stroke="white" stroke-width="2" />
-          <!-- 左側 -->
           <path d="M 0 50 A 120 120 0 0 1 120 170 L 120 230 A 120 120 0 0 1 0 350 Z" fill="#4da6ff" stroke="white" stroke-width="2" />
           <path d="M 0 -10 A 180 180 0 0 1 180 170 L 180 230 A 180 180 0 0 1 0 410" fill="none" stroke="white" stroke-width="2" stroke-dasharray="10, 10" />
           <line x1="140" y1="190" x2="140" y2="210" stroke="white" stroke-width="2" />
           <line x1="80" y1="195" x2="80" y2="205" stroke="white" stroke-width="2" />
-          <!-- 右側 -->
           <path d="M 800 50 A 120 120 0 0 0 680 170 L 680 230 A 120 120 0 0 0 800 350 Z" fill="#4da6ff" stroke="white" stroke-width="2" />
           <path d="M 800 -10 A 180 180 0 0 0 620 170 L 620 230 A 180 180 0 0 0 800 410" fill="none" stroke="white" stroke-width="2" stroke-dasharray="10, 10" />
           <line x1="660" y1="190" x2="660" y2="210" stroke="white" stroke-width="2" />
@@ -141,19 +130,16 @@
         <rect x="800" y="170" width="20" height="60" fill="url(#goalPattern)" stroke="white" stroke-width="2" />
       </g>
 
-      <!-- ＝＝＝＝＝ フルコート（縦向き） ＝＝＝＝＝ -->
       <g id="court-full-v" style="display: none;">
         <rect x="-100" y="-100" width="600" height="1000" fill="#2b3e50" />
         <rect x="0" y="0" width="400" height="800" fill="url(#courtGrad)" />
         <g clip-path="url(#court-clip-full-v)">
           <line x1="0" y1="400" x2="400" y2="400" stroke="white" stroke-width="3" />
           <circle cx="200" cy="400" r="40" fill="none" stroke="white" stroke-width="2" />
-          <!-- 上側 -->
           <path d="M 50 0 A 120 120 0 0 0 170 120 L 230 120 A 120 120 0 0 0 350 0 Z" fill="#4da6ff" stroke="white" stroke-width="2" />
           <path d="M -10 0 A 180 180 0 0 0 170 180 L 230 180 A 180 180 0 0 0 410 0" fill="none" stroke="white" stroke-width="2" stroke-dasharray="10, 10" />
           <line x1="190" y1="140" x2="210" y2="140" stroke="white" stroke-width="2" />
           <line x1="185" y1="80" x2="215" y2="80" stroke="white" stroke-width="2" />
-          <!-- 下側 -->
           <path d="M 50 800 A 120 120 0 0 1 170 680 L 230 680 A 120 120 0 0 1 350 800 Z" fill="#4da6ff" stroke="white" stroke-width="2" />
           <path d="M -10 800 A 180 180 0 0 1 170 620 L 230 620 A 180 180 0 0 1 410 800" fill="none" stroke="white" stroke-width="2" stroke-dasharray="10, 10" />
           <line x1="190" y1="660" x2="210" y2="660" stroke="white" stroke-width="2" />
@@ -168,7 +154,6 @@
         <rect x="170" y="800" width="60" height="20" fill="url(#goalPattern)" stroke="white" stroke-width="2" />
       </g>
 
-      <!-- ＝＝＝＝＝ ハーフコート（縦向き） ＝＝＝＝＝ -->
       <g id="court-half" style="display: none;">
         <rect x="-100" y="-100" width="600" height="600" fill="#2b3e50" />
         <rect x="0" y="0" width="400" height="400" fill="url(#courtGrad)" />
@@ -241,11 +226,12 @@
       
       btnClearLines.addEventListener('click', () => { 
         drawLayer.innerHTML = ''; 
+        // DFラインも削除する場合
         players = players.filter(p => p.team !== 'df-node');
         renderPlayers();
       });
 
-      // 🌟 初期配置データ（フル横、フル縦、ハーフの3種類）
+      // 初期配置データ
       const defaultPlayersFullH = [
         { id: 'a1', team: 'A', label: 'GK', x: 20, y: 200 }, { id: 'a2', team: 'A', label: 'LW', x: 130, y: 60 },
         { id: 'a3', team: 'A', label: 'LB', x: 150, y: 120 }, { id: 'a4', team: 'A', label: 'CB', x: 150, y: 200 },
@@ -282,6 +268,20 @@
         { id: 'ball', team: 'ball', label: '⚽', x: 200, y: 240 }
       ];
 
+      let players = [];
+      let draggingElement = null;
+      let offset = { x: 0, y: 0 };
+      let dragStartTime = 0;
+      let editingPlayerId = null;
+      let nextId = 100;
+      let isPlayingAnim = false;
+      let scenes = [];
+
+      // 初回表示
+      players = JSON.parse(JSON.stringify(defaultPlayersFullH));
+      renderPlayers();
+
+      // 表示切り替え
       viewSelect.addEventListener('change', (e) => {
         const val = e.target.value;
         if (val === 'full-h') {
@@ -310,6 +310,7 @@
         renderPlayers();
       });
 
+      // マウス/タッチ座標取得
       function getMousePosition(evt) {
         const CTM = svg.getScreenCTM();
         if (evt.touches && evt.touches.length > 0) evt = evt.touches[0];
@@ -317,6 +318,7 @@
         return { x: (evt.clientX - CTM.e) / CTM.a, y: (evt.clientY - CTM.f) / CTM.d };
       }
 
+      // ===== ペン描画ロジック =====
       function startDraw(evt) {
         if (mode === 'move') return;
         evt.preventDefault();
@@ -348,22 +350,26 @@
         currentPath.setAttribute('d', pathData);
       }
 
-      function endDraw(evt) { if (isDrawing) { isDrawing = false; currentPath = null; } }
+      function endDraw(evt) { 
+        if (isDrawing) { isDrawing = false; currentPath = null; } 
+      }
 
-      svg.addEventListener('mousedown', (e) => { if (!['circle', 'polygon', 'text', 'g', 'path', 'ellipse', 'rect'].includes(e.target.tagName)) startDraw(e); });
+      // 修正: 'move' 以外であれば線を引けるように条件を変更
+      svg.addEventListener('mousedown', (e) => { 
+        if (mode !== 'move') startDraw(e); 
+      });
       svg.addEventListener('mousemove', drawPath);
       window.addEventListener('mouseup', endDraw);
-      svg.addEventListener('touchstart', (e) => { if (e.touches.length === 1 && !['circle', 'polygon', 'text', 'g', 'path', 'ellipse', 'rect'].includes(e.target.tagName)) startDraw(e); }, { passive: false });
-      svg.addEventListener('touchmove', (e) => { if (e.touches.length === 1 && isDrawing) drawPath(e); }, { passive: false });
+      svg.addEventListener('touchstart', (e) => { 
+        if (e.touches.length === 1 && mode !== 'move') startDraw(e); 
+      }, { passive: false });
+      svg.addEventListener('touchmove', (e) => { 
+        if (e.touches.length === 1 && isDrawing) drawPath(e); 
+      }, { passive: false });
       window.addEventListener('touchend', endDraw);
 
-      let players = [];
-      let draggingElement = null;
-      let offset = { x: 0, y: 0 };
-      let dragStartTime = 0;
-      let editingPlayerId = null;
-      let nextId = 100;
 
+      // ===== DFライン・駒の描画ロジック =====
       function updateDfLines() {
         const dfGroups = {};
         players.forEach(p => {
@@ -414,50 +420,41 @@
             group.dataset.id = player.id;
 
             if (player.team === 'cone') {
-              // コーンの影
               const shadow = document.createElementNS('http://www.w3.org/2000/svg', 'ellipse');
               shadow.setAttribute('rx', '14'); shadow.setAttribute('ry', '6'); shadow.setAttribute('cy', '10'); shadow.setAttribute('fill', 'rgba(0,0,0,0.3)');
               group.appendChild(shadow);
 
-              // コーンの土台
               const base = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
               base.setAttribute('x', '-11'); base.setAttribute('y', '6'); base.setAttribute('width', '22'); base.setAttribute('height', '5'); base.setAttribute('rx', '2'); base.setAttribute('fill', '#c2410c');
               group.appendChild(base);
 
-              // コーンの本体（立体的なグラデーション）
               const body = document.createElementNS('http://www.w3.org/2000/svg', 'path');
               body.setAttribute('d', 'M -8 8 L 8 8 L 2 -12 Q 0 -14 -2 -12 Z');
               body.setAttribute('fill', 'url(#coneGrad)');
               group.appendChild(body);
 
-              // コーンの白い反射テープ
               const tape = document.createElementNS('http://www.w3.org/2000/svg', 'path');
               tape.setAttribute('d', 'M -5.5 -1 L 5.5 -1 L 4.5 -5 L -4.5 -5 Z');
               tape.setAttribute('fill', 'rgba(255,255,255,0.9)');
               group.appendChild(tape);
               
-              // コーンの頂点
               const tip = document.createElementNS('http://www.w3.org/2000/svg', 'ellipse');
               tip.setAttribute('cx', '0'); tip.setAttribute('cy', '-12'); tip.setAttribute('rx', '2'); tip.setAttribute('ry', '1'); tip.setAttribute('fill', '#fdba74');
               group.appendChild(tip);
               
             } else if (player.team === 'marker') {
-              // マーカーの影
               const shadow = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
               shadow.setAttribute('r', '13'); shadow.setAttribute('cy', '2'); shadow.setAttribute('fill', 'rgba(0,0,0,0.3)');
               group.appendChild(shadow);
 
-              // マーカーの本体（立体的なグラデーション）
               const outer = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
               outer.setAttribute('r', '13'); outer.setAttribute('fill', 'url(#markerGrad)');
               group.appendChild(outer);
 
-              // マーカー中央の穴（暗い部分）
               const hole = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
               hole.setAttribute('r', '3'); hole.setAttribute('fill', 'rgba(0,0,0,0.5)');
               group.appendChild(hole);
 
-              // マーカー中央の穴のフチ（ハイライト）
               const holeRim = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
               holeRim.setAttribute('r', '4'); holeRim.setAttribute('fill', 'none'); holeRim.setAttribute('stroke', '#fef08a'); holeRim.setAttribute('stroke-width', '1');
               group.appendChild(holeRim);
@@ -480,251 +477,4 @@
 
               const circle = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
               circle.setAttribute('r', radius); circle.setAttribute('fill', fill); circle.setAttribute('stroke', 'white'); circle.setAttribute('stroke-width', '2');
-              group.appendChild(circle);
-
-              const text = document.createElementNS('http://www.w3.org/2000/svg', 'text');
-              text.setAttribute('x', '0'); 
-              text.setAttribute('y', '4'); 
-              text.setAttribute('text-anchor', 'middle');
-              text.setAttribute('fill', isBall ? 'black' : 'white'); 
-              // 3文字対応の文字サイズと字送り調整
-              text.setAttribute('font-size', isBall ? '14' : '12');
-              text.setAttribute('letter-spacing', '-0.5');
-              text.setAttribute('class', 'player-label'); 
-              text.textContent = player.label;
-              group.appendChild(text);
-            }
-            group.addEventListener('mousedown', startPlayerDrag);
-            group.addEventListener('touchstart', startPlayerDrag, { passive: false });
-          } else {
-            const textEl = group.querySelector('.player-label');
-            if (textEl && player.team !== 'cone' && player.team !== 'marker' && player.team !== 'df-node') {
-              textEl.textContent = player.label;
-            }
-          }
-          playersLayer.appendChild(group);
-          group.style.transform = `translate(${player.x}px, ${player.y}px)`;
-        });
-        updateDfLines();
-      }
-
-      function startPlayerDrag(evt) {
-        if (mode !== 'move' || isPlayingAnim) return;
-        evt.preventDefault();
-        evt.stopPropagation();
-        dragStartTime = Date.now();
-        const target = evt.currentTarget;
-        const player = players.find(p => p.id === target.dataset.id);
-        if (!player) return;
-        draggingElement = { group: target, id: player.id, player: player, isMoved: false };
-        const mousePos = getMousePosition(evt);
-        offset.x = mousePos.x - player.x;
-        offset.y = mousePos.y - player.y;
-        target.setAttribute('opacity', '0.8');
-        if (player.team !== 'df-node') playersLayer.appendChild(target);
-      }
-
-      function dragPlayer(evt) {
-        if (!draggingElement || mode !== 'move') return;
-        evt.preventDefault();
-        draggingElement.isMoved = true;
-        const mousePos = getMousePosition(evt);
-        const newX = mousePos.x - offset.x;
-        const newY = mousePos.y - offset.y;
-        
-        draggingElement.player.x = newX;
-        draggingElement.player.y = newY;
-        draggingElement.group.style.transform = `translate(${newX}px, ${newY}px)`;
-
-        if (draggingElement.player.team === 'df-node') {
-          draggingElement.player.bindTo = null; 
-          updateDfLines();
-        } else {
-          let needUpdateLines = false;
-          players.forEach(p => {
-            if (p.team === 'df-node' && p.bindTo === draggingElement.player.id) {
-              p.x = newX;
-              p.y = newY;
-              const g = playersLayer.querySelector(`g[data-id="${p.id}"]`);
-              if (g) g.style.transform = `translate(${newX}px, ${newY}px)`;
-              needUpdateLines = true;
-            }
-          });
-          if (needUpdateLines) updateDfLines();
-        }
-      }
-
-      function endPlayerDrag(evt) {
-        if (!draggingElement) return;
-        draggingElement.group.setAttribute('opacity', '100');
-        const { id, player, isMoved } = draggingElement;
-        draggingElement = null;
-
-        if (!isMoved && (Date.now() - dragStartTime) < 300) {
-          openNameModal(id);
-          return;
-        }
-
-        if (player.team === 'df-node') {
-          player.bindTo = null;
-          for (let p of players) {
-            if ((p.team === 'A' || p.team === 'B') && p.id !== player.id) {
-              const dx = p.x - player.x;
-              const dy = p.y - player.y;
-              if (Math.sqrt(dx * dx + dy * dy) < 25) {
-                player.bindTo = p.id;
-                player.x = p.x;
-                player.y = p.y;
-                const group = playersLayer.querySelector(`g[data-id="${player.id}"]`);
-                if (group) group.style.transform = `translate(${player.x}px, ${player.y}px)`;
-                break;
-              }
-            }
-          }
-          renderPlayers();
-        }
-
-        // 枠外判定（様々な画面向きに対応するため広めに設定）
-        if (player.team !== 'ball' && (player.x < -150 || player.x > 1050 || player.y < -150 || player.y > 1050)) {
-          if (player.team === 'df-node') {
-            players = players.filter(p => p.groupId !== player.groupId);
-          } else {
-            players = players.filter(p => p.id !== id);
-            players.forEach(p => { if (p.bindTo === id) p.bindTo = null; });
-          }
-          renderPlayers();
-        }
-      }
-
-      window.addEventListener('mousemove', dragPlayer);
-      window.addEventListener('touchmove', dragPlayer, { passive: false });
-      window.addEventListener('mouseup', endPlayerDrag);
-      window.addEventListener('touchend', endPlayerDrag);
-
-      let scenes = [];
-      let isPlayingAnim = false;
-      const sceneCountEl = document.getElementById('scene-count');
-      const btnRecord = document.getElementById('record-scene-btn');
-      const btnPlay = document.getElementById('play-anim-btn');
-      const btnClearAnim = document.getElementById('clear-anim-btn');
-
-      btnRecord.addEventListener('click', () => {
-        if (isPlayingAnim) return;
-        scenes.push(JSON.parse(JSON.stringify(players)));
-        sceneCountEl.textContent = scenes.length;
-        btnRecord.classList.add('bg-red-200');
-        setTimeout(() => btnRecord.classList.remove('bg-red-200'), 200);
-      });
-
-      btnClearAnim.addEventListener('click', () => {
-        if (isPlayingAnim) return;
-        scenes = [];
-        sceneCountEl.textContent = '0';
-      });
-
-      btnPlay.addEventListener('click', async () => {
-        if (isPlayingAnim) return;
-        if (scenes.length < 2) {
-          alert("アニメーションを再生するには、シーンを2つ以上記録してください。\n\n1. 配置を決めて「⏺ 記録」を押す\n2. 駒を動かす\n3. 再度「⏺ 記録」を押す\n4. 「▶ 再生」で動きます！");
-          return;
-        }
-        isPlayingAnim = true;
-        btnPlay.innerHTML = '⏳ 再生中...';
-        btnPlay.classList.add('opacity-50', 'cursor-not-allowed');
-
-        players = JSON.parse(JSON.stringify(scenes[0]));
-        renderPlayers();
-        await new Promise(resolve => requestAnimationFrame(resolve));
-
-        for (let i = 1; i < scenes.length; i++) {
-          await new Promise(resolve => setTimeout(resolve, 300)); 
-          const startScene = JSON.parse(JSON.stringify(players));
-          const endScene = scenes[i];
-          const duration = 1200; 
-          
-          await new Promise(resolve => {
-            let startTime = null;
-            function step(timestamp) {
-              if (!startTime) startTime = timestamp;
-              let progress = (timestamp - startTime) / duration;
-              if (progress > 1) progress = 1;
-              const ease = progress < 0.5 ? 2 * progress * progress : -1 + (4 - 2 * progress) * progress;
-              
-              players = JSON.parse(JSON.stringify(endScene));
-              players.forEach(p => {
-                const startP = startScene.find(sp => sp.id === p.id);
-                const endP = endScene.find(ep => ep.id === p.id);
-                if (startP && endP) {
-                  p.x = startP.x + (endP.x - startP.x) * ease;
-                  p.y = startP.y + (endP.y - startP.y) * ease;
-                }
-              });
-              renderPlayers();
-              if (progress < 1) requestAnimationFrame(step);
-              else resolve();
-            }
-            requestAnimationFrame(step);
-          });
-        }
-        isPlayingAnim = false;
-        btnPlay.innerHTML = '▶ 再生';
-        btnPlay.classList.remove('opacity-50', 'cursor-not-allowed');
-      });
-
-      document.getElementById('reset-btn').addEventListener('click', () => {
-        const val = document.getElementById('view-select').value;
-        if (val === 'full-h') players = JSON.parse(JSON.stringify(defaultPlayersFullH));
-        else if (val === 'full-v') players = JSON.parse(JSON.stringify(defaultPlayersFullV));
-        else players = JSON.parse(JSON.stringify(defaultPlayersHalf));
-        drawLayer.innerHTML = ''; 
-        scenes = []; 
-        sceneCountEl.textContent = '0';
-        renderPlayers();
-      });
-      
-      function getAddPosition() {
-        const val = document.getElementById('view-select').value;
-        if (val === 'full-h') return { x: 400 + (Math.random() * 40 - 20), y: 200 + (Math.random() * 40 - 20) };
-        if (val === 'full-v') return { x: 200 + (Math.random() * 40 - 20), y: 400 + (Math.random() * 40 - 20) };
-        return { x: 200 + (Math.random() * 40 - 20), y: 200 + (Math.random() * 40 - 20) };
-      }
-
-      document.getElementById('add-a-btn').addEventListener('click', () => { const p = getAddPosition(); players.push({ id: `new_${nextId++}`, team: 'A', label: '+', x: p.x, y: p.y }); renderPlayers(); });
-      document.getElementById('add-b-btn').addEventListener('click', () => { const p = getAddPosition(); players.push({ id: `new_${nextId++}`, team: 'B', label: '+', x: p.x, y: p.y }); renderPlayers(); });
-      document.getElementById('add-cone-btn').addEventListener('click', () => { const p = getAddPosition(); players.push({ id: `new_${nextId++}`, team: 'cone', label: '', x: p.x, y: p.y }); renderPlayers(); });
-      document.getElementById('add-marker-btn').addEventListener('click', () => { const p = getAddPosition(); players.push({ id: `new_${nextId++}`, team: 'marker', label: '', x: p.x, y: p.y }); renderPlayers(); });
-      document.getElementById('add-df-line-btn').addEventListener('click', () => { 
-        const gId = `dfl_${nextId++}`;
-        const p = getAddPosition();
-        players.push({ id: `${gId}_1`, team: 'df-node', groupId: gId, label: '', x: p.x - 50, y: p.y }); 
-        players.push({ id: `${gId}_2`, team: 'df-node', groupId: gId, label: '', x: p.x + 50, y: p.y }); 
-        renderPlayers(); 
-      });
-
-      const modal = document.getElementById('name-modal');
-      const nameInput = document.getElementById('name-input');
-      function openNameModal(id) {
-        const player = players.find(p => p.id === id);
-        if (!player || player.team === 'ball' || player.team === 'cone' || player.team === 'marker' || player.team === 'df-node') return;
-        editingPlayerId = id; nameInput.value = player.label; modal.classList.remove('hidden'); 
-        setTimeout(() => { nameInput.focus(); nameInput.select(); }, 50);
-      }
-      function closeModal() { modal.classList.add('hidden'); editingPlayerId = null; }
-      function saveName() {
-        if (editingPlayerId) {
-          const player = players.find(p => p.id === editingPlayerId);
-          if (player) { player.label = nameInput.value.trim() || ' '; renderPlayers(); }
-        }
-        closeModal();
-      }
-      document.getElementById('modal-cancel').addEventListener('click', closeModal);
-      document.getElementById('modal-save').addEventListener('click', saveName);
-      nameInput.addEventListener('keydown', (e) => { if (e.key === 'Enter') saveName(); if (e.key === 'Escape') closeModal(); });
-
-      // 初期起動
-      players = JSON.parse(JSON.stringify(defaultPlayersFullH));
-      renderPlayers();
-    });
-  </script>
-</body>
-</html>
+              group.appendChild
