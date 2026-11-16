@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-  <title>ハンドボール作戦ボード</title>
+  <title>ITS Handball 作戦ボード v2</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <style>
     .no-select { user-select: none; -webkit-user-select: none; }
@@ -20,6 +20,10 @@
       .responsive-header { flex-wrap: wrap !important; overflow-x: visible !important; white-space: normal !important; }
       .separator { display: none !important; }
     }
+    .v2-btn { background:white; border:1px solid #cbd5e1; border-radius:5px; padding:5px 8px; font-weight:600; min-height:32px; }
+    .v2-btn:focus-visible, button:focus-visible {outline:2px solid #2563eb;outline-offset:2px}
+    #board {touch-action:none}
+    @media(max-width:640px){#v2-tools {max-height:100px;overflow-y:auto} .v2-btn{min-height:36px}}
   </style>
 </head>
 <body class="bg-gray-100 h-screen w-screen overflow-hidden flex flex-col font-sans text-gray-800 touch-none select-none">
@@ -66,6 +70,16 @@
         </button>
         <button id="play-anim-btn" class="px-2 py-1 bg-green-500 text-white rounded text-[10px] font-bold shadow-sm">▶ 再生</button>
         <button id="clear-anim-btn" class="px-1.5 py-1 bg-white border border-gray-300 text-gray-600 rounded text-[10px] font-bold shadow-sm">🗑️</button>
+      </div>
+      <div class="px-2 pb-1 flex flex-wrap gap-1 items-center text-xs" id="v2-tools">
+        <button id="undo-btn" class="v2-btn">↶ 戻す</button><button id="redo-btn" class="v2-btn">↷ やり直す</button>
+        <select id="template-select" class="v2-btn" aria-label="戦術テンプレート"><option value="">戦術テンプレート</option><option value="6-0">6-0 DF</option><option value="5-1">5-1 DF</option><option value="3-2-1">3-2-1 DF</option><option value="7attack">7人攻撃</option></select>
+        <select id="line-style" class="v2-btn" aria-label="線種"><option value="move">移動（実線）</option><option value="pass">パス（破線）</option><option value="shot">シュート（太線）</option></select>
+        <button id="save-btn" class="v2-btn">保存 JSON</button><button id="load-btn" class="v2-btn">読込 JSON</button><input type="file" id="load-file" accept=".json,application/json" hidden>
+        <button id="png-btn" class="v2-btn">PNG出力</button><button id="fullscreen-btn" class="v2-btn">全画面</button>
+        <button id="prev-scene" class="v2-btn">◀ シーン</button><button id="next-scene" class="v2-btn">シーン ▶</button><button id="stop-btn" class="v2-btn">■ 停止</button>
+        <label class="flex items-center gap-1">速度 <select id="speed-select" class="v2-btn"><option value="0.5">0.5×</option><option value="1" selected>1×</option><option value="1.5">1.5×</option><option value="2">2×</option></select></label>
+        <span id="status" role="status" aria-live="polite" class="text-gray-600 ml-auto">自動保存 有効</span>
       </div>
     </div>
   </header>
@@ -179,7 +193,7 @@
   <div id="name-modal" class="fixed inset-0 bg-black bg-opacity-50 modal-backdrop hidden flex justify-center items-center z-50">
     <div class="bg-white rounded-xl shadow-xl p-4 w-64 max-w-[90%] transform transition-all">
       <h3 class="text-sm font-bold text-gray-800 mb-3 text-center border-b pb-2">駒の名前を変更</h3>
-      <input type="text" id="name-input" class="w-full border border-gray-300 rounded p-2 mb-3 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-center text-lg font-bold" autocomplete="off" maxlength="3" placeholder="背番号など">
+      <input type="text" id="name-input" class="w-full border border-gray-300 rounded p-2 mb-3 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-center text-lg font-bold" autocomplete="off" maxlength="8" placeholder="背番号など">
       <div class="flex justify-between gap-2">
         <button id="modal-cancel" class="flex-1 py-1.5 bg-gray-200 text-gray-700 rounded text-sm font-bold">キャンセル</button>
         <button id="modal-save" class="flex-1 py-1.5 bg-blue-600 text-white rounded text-sm font-bold shadow">保存</button>
@@ -188,518 +202,70 @@
   </div>
 
   <script>
-    document.addEventListener('DOMContentLoaded', () => {
-      const svg = document.getElementById('board');
-      const playersLayer = document.getElementById('players-layer');
-      const dfLinesLayer = document.getElementById('df-lines-layer');
-      const drawLayer = document.getElementById('draw-layer');
-      
-      const btnMove = document.getElementById('mode-move');
-      const btnDrawRed = document.getElementById('mode-draw-red');
-      const btnDrawBlue = document.getElementById('mode-draw-blue');
-      const btnClearLines = document.getElementById('clear-lines-btn');
-      const viewSelect = document.getElementById('view-select');
-
-      let mode = 'move';
-      let isDrawing = false;
-      let currentPath = null;
-      let pathData = '';
-
-      function setMode(newMode) {
-        mode = newMode;
-        btnMove.classList.remove('active');
-        btnDrawRed.classList.remove('active');
-        btnDrawBlue.classList.remove('active');
-        if (mode === 'move') {
-          btnMove.classList.add('active');
-          svg.style.cursor = 'default';
-        } else {
-          if (mode === 'draw-red') btnDrawRed.classList.add('active');
-          if (mode === 'draw-blue') btnDrawBlue.classList.add('active');
-          svg.style.cursor = 'crosshair';
-        }
-      }
-
-      btnMove.addEventListener('click', () => setMode('move'));
-      btnDrawRed.addEventListener('click', () => setMode('draw-red'));
-      btnDrawBlue.addEventListener('click', () => setMode('draw-blue'));
-      
-      btnClearLines.addEventListener('click', () => { 
-        drawLayer.innerHTML = ''; 
-        players = players.filter(p => p.team !== 'df-node');
-        renderPlayers();
-      });
-
-      // 🌟 初期配置データ
-      const defaultPlayersFullH = [
-        { id: 'a1', team: 'A', label: 'GK', x: 20, y: 200 }, { id: 'a2', team: 'A', label: 'LW', x: 130, y: 60 },
-        { id: 'a3', team: 'A', label: 'LB', x: 150, y: 120 }, { id: 'a4', team: 'A', label: 'CB', x: 150, y: 200 },
-        { id: 'a5', team: 'A', label: 'RB', x: 150, y: 280 }, { id: 'a6', team: 'A', label: 'RW', x: 130, y: 340 },
-        { id: 'a7', team: 'A', label: 'PV', x: 130, y: 160 },
-        { id: 'b1', team: 'B', label: 'GK', x: 780, y: 200 }, { id: 'b2', team: 'B', label: 'RW', x: 670, y: 40 },
-        { id: 'b3', team: 'B', label: 'RB', x: 650, y: 100 }, { id: 'b4', team: 'B', label: 'CB', x: 650, y: 200 },
-        { id: 'b5', team: 'B', label: 'LB', x: 650, y: 300 }, { id: 'b6', team: 'B', label: 'LW', x: 670, y: 360 },
-        { id: 'b7', team: 'B', label: 'PV', x: 670, y: 240 },
-        { id: 'ball', team: 'ball', label: '⚽', x: 400, y: 200 }
-      ];
-
-      const defaultPlayersFullV = [
-        { id: 'a1', team: 'A', label: 'GK', x: 200, y: 780 }, { id: 'a2', team: 'A', label: 'LW', x: 60, y: 670 },
-        { id: 'a3', team: 'A', label: 'LB', x: 120, y: 650 }, { id: 'a4', team: 'A', label: 'CB', x: 200, y: 650 },
-        { id: 'a5', team: 'A', label: 'RB', x: 280, y: 650 }, { id: 'a6', team: 'A', label: 'RW', x: 340, y: 670 },
-        { id: 'a7', team: 'A', label: 'PV', x: 200, y: 670 },
-        { id: 'b1', team: 'B', label: 'GK', x: 200, y: 20 }, { id: 'b2', team: 'B', label: 'RW', x: 40, y: 130 },
-        { id: 'b3', team: 'B', label: 'RB', x: 100, y: 150 }, { id: 'b4', team: 'B', label: 'CB', x: 200, y: 150 },
-        { id: 'b5', team: 'B', label: 'LB', x: 300, y: 150 }, { id: 'b6', team: 'B', label: 'LW', x: 360, y: 130 },
-        { id: 'b7', team: 'B', label: 'PV', x: 200, y: 130 },
-        { id: 'ball', team: 'ball', label: '⚽', x: 200, y: 400 }
-      ];
-
-      const defaultPlayersHalf = [
-        { id: 'a1', team: 'A', label: 'GK', x: 200, y: 20 }, { id: 'a2', team: 'A', label: 'LW', x: 70, y: 110 },
-        { id: 'a3', team: 'A', label: 'LB', x: 130, y: 130 }, { id: 'a4', team: 'A', label: 'CB', x: 200, y: 140 },
-        { id: 'a5', team: 'A', label: 'RB', x: 270, y: 130 }, { id: 'a6', team: 'A', label: 'RW', x: 330, y: 110 },
-        { id: 'a7', team: 'A', label: 'PV', x: 200, y: 110 },
-        { id: 'b1', team: 'B', label: 'GK', x: 200, y: 380 }, { id: 'b2', team: 'B', label: 'LW', x: 40, y: 300 },
-        { id: 'b3', team: 'B', label: 'LB', x: 120, y: 250 }, { id: 'b4', team: 'B', label: 'CB', x: 200, y: 270 },
-        { id: 'b5', team: 'B', label: 'RB', x: 280, y: 250 }, { id: 'b6', team: 'B', label: 'RW', x: 360, y: 300 },
-        { id: 'b7', team: 'B', label: 'PV', x: 200, y: 160 },
-        { id: 'ball', team: 'ball', label: '⚽', x: 200, y: 240 }
-      ];
-
-      viewSelect.addEventListener('change', (e) => {
-        const val = e.target.value;
-        if (val === 'full-h') {
-          svg.setAttribute('viewBox', '-25 -15 850 430');
-          document.getElementById('court-full-h').style.display = 'block';
-          document.getElementById('court-full-v').style.display = 'none';
-          document.getElementById('court-half').style.display = 'none';
-          players = JSON.parse(JSON.stringify(defaultPlayersFullH));
-        } else if (val === 'full-v') {
-          svg.setAttribute('viewBox', '-15 -25 430 850');
-          document.getElementById('court-full-h').style.display = 'none';
-          document.getElementById('court-full-v').style.display = 'block';
-          document.getElementById('court-half').style.display = 'none';
-          players = JSON.parse(JSON.stringify(defaultPlayersFullV));
-        } else if (val === 'half') {
-          svg.setAttribute('viewBox', '-15 -25 430 440');
-          document.getElementById('court-full-h').style.display = 'none';
-          document.getElementById('court-full-v').style.display = 'none';
-          document.getElementById('court-half').style.display = 'block';
-          players = JSON.parse(JSON.stringify(defaultPlayersHalf));
-        }
-        
-        drawLayer.innerHTML = ''; 
-        scenes = []; 
-        document.getElementById('scene-count').textContent = '0';
-        renderPlayers();
-      });
-
-      function getMousePosition(evt) {
-        const CTM = svg.getScreenCTM();
-        if (evt.touches && evt.touches.length > 0) evt = evt.touches[0];
-        else if (evt.changedTouches && evt.changedTouches.length > 0) evt = evt.changedTouches[0];
-        return { x: (evt.clientX - CTM.e) / CTM.a, y: (evt.clientY - CTM.f) / CTM.d };
-      }
-
-      function startDraw(evt) {
-        if (mode === 'move') return;
-        evt.preventDefault();
-        isDrawing = true;
-        const pos = getMousePosition(evt);
-        pathData = `M ${pos.x} ${pos.y}`;
-        currentPath = document.createElementNS('http://www.w3.org/2000/svg', 'path');
-        currentPath.setAttribute('fill', 'none');
-        currentPath.setAttribute('stroke-width', '4');
-        currentPath.setAttribute('stroke-linecap', 'round');
-        currentPath.setAttribute('stroke-linejoin', 'round');
-        currentPath.setAttribute('opacity', '0.8');
-        if (mode === 'draw-red') {
-          currentPath.setAttribute('stroke', '#ef4444');
-          currentPath.setAttribute('marker-end', 'url(#arrow-red)');
-        } else {
-          currentPath.setAttribute('stroke', '#3b82f6');
-          currentPath.setAttribute('marker-end', 'url(#arrow-blue)');
-        }
-        currentPath.setAttribute('d', pathData);
-        drawLayer.appendChild(currentPath);
-      }
-
-      function drawPath(evt) {
-        if (!isDrawing || mode === 'move') return;
-        evt.preventDefault();
-        const pos = getMousePosition(evt);
-        pathData += ` L ${pos.x} ${pos.y}`;
-        currentPath.setAttribute('d', pathData);
-      }
-
-      function endDraw(evt) { if (isDrawing) { isDrawing = false; currentPath = null; } }
-
-      // ★ここが修正箇所です（タグ名による制限を撤廃し、モードだけで判定します）
-      svg.addEventListener('mousedown', (e) => { if (mode !== 'move') startDraw(e); });
-      svg.addEventListener('mousemove', drawPath);
-      window.addEventListener('mouseup', endDraw);
-      svg.addEventListener('touchstart', (e) => { if (e.touches.length === 1 && mode !== 'move') startDraw(e); }, { passive: false });
-      svg.addEventListener('touchmove', (e) => { if (e.touches.length === 1 && isDrawing) drawPath(e); }, { passive: false });
-      window.addEventListener('touchend', endDraw);
-
-      let players = [];
-      let draggingElement = null;
-      let offset = { x: 0, y: 0 };
-      let dragStartTime = 0;
-      let editingPlayerId = null;
-      let nextId = 100;
-
-      function updateDfLines() {
-        const dfGroups = {};
-        players.forEach(p => {
-          if (p.team === 'df-node') {
-            if (!dfGroups[p.groupId]) dfGroups[p.groupId] = [];
-            dfGroups[p.groupId].push(p);
-          }
-        });
-        const currentLineIds = new Set(Object.keys(dfGroups));
-        Array.from(dfLinesLayer.children).forEach(child => {
-          if (!currentLineIds.has(child.dataset.id)) child.remove();
-        });
-        Object.keys(dfGroups).forEach(groupId => {
-          const nodes = dfGroups[groupId];
-          if (nodes.length === 2) {
-            let line = dfLinesLayer.querySelector(`line[data-id="${groupId}"]`);
-            if (!line) {
-              line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
-              line.dataset.id = groupId;
-              line.setAttribute('stroke', 'rgba(59, 130, 246, 0.4)');
-              line.setAttribute('stroke-width', '14');
-              line.setAttribute('stroke-linecap', 'round');
-              dfLinesLayer.appendChild(line);
-            }
-            line.setAttribute('x1', nodes[0].x);
-            line.setAttribute('y1', nodes[0].y);
-            line.setAttribute('x2', nodes[1].x);
-            line.setAttribute('y2', nodes[1].y);
-          }
-        });
-      }
-
-      function renderPlayers() {
-        const currentIds = new Set(players.map(p => p.id));
-        Array.from(playersLayer.children).forEach(child => {
-          if (!currentIds.has(child.dataset.id)) child.remove();
-        });
-
-        const dfNodes = players.filter(p => p.team === 'df-node');
-        const otherPlayers = players.filter(p => p.team !== 'df-node');
-        const sortedPlayers = [...dfNodes, ...otherPlayers];
-
-        sortedPlayers.forEach(player => {
-          let group = playersLayer.querySelector(`g[data-id="${player.id}"]`);
-          if (!group) {
-            group = document.createElementNS('http://www.w3.org/2000/svg', 'g');
-            group.setAttribute('class', 'no-select cursor-pointer piece-group');
-            group.dataset.id = player.id;
-
-            if (player.team === 'cone') {
-              const shadow = document.createElementNS('http://www.w3.org/2000/svg', 'ellipse');
-              shadow.setAttribute('rx', '14'); shadow.setAttribute('ry', '6'); shadow.setAttribute('cy', '10'); shadow.setAttribute('fill', 'rgba(0,0,0,0.3)');
-              group.appendChild(shadow);
-
-              const base = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
-              base.setAttribute('x', '-11'); base.setAttribute('y', '6'); base.setAttribute('width', '22'); base.setAttribute('height', '5'); base.setAttribute('rx', '2'); base.setAttribute('fill', '#c2410c');
-              group.appendChild(base);
-
-              const body = document.createElementNS('http://www.w3.org/2000/svg', 'path');
-              body.setAttribute('d', 'M -8 8 L 8 8 L 2 -12 Q 0 -14 -2 -12 Z');
-              body.setAttribute('fill', 'url(#coneGrad)');
-              group.appendChild(body);
-
-              const tape = document.createElementNS('http://www.w3.org/2000/svg', 'path');
-              tape.setAttribute('d', 'M -5.5 -1 L 5.5 -1 L 4.5 -5 L -4.5 -5 Z');
-              tape.setAttribute('fill', 'rgba(255,255,255,0.9)');
-              group.appendChild(tape);
-              
-              const tip = document.createElementNS('http://www.w3.org/2000/svg', 'ellipse');
-              tip.setAttribute('cx', '0'); tip.setAttribute('cy', '-12'); tip.setAttribute('rx', '2'); tip.setAttribute('ry', '1'); tip.setAttribute('fill', '#fdba74');
-              group.appendChild(tip);
-              
-            } else if (player.team === 'marker') {
-              const shadow = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
-              shadow.setAttribute('r', '13'); shadow.setAttribute('cy', '2'); shadow.setAttribute('fill', 'rgba(0,0,0,0.3)');
-              group.appendChild(shadow);
-
-              const outer = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
-              outer.setAttribute('r', '13'); outer.setAttribute('fill', 'url(#markerGrad)');
-              group.appendChild(outer);
-
-              const hole = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
-              hole.setAttribute('r', '3'); hole.setAttribute('fill', 'rgba(0,0,0,0.5)');
-              group.appendChild(hole);
-
-              const holeRim = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
-              holeRim.setAttribute('r', '4'); holeRim.setAttribute('fill', 'none'); holeRim.setAttribute('stroke', '#fef08a'); holeRim.setAttribute('stroke-width', '1');
-              group.appendChild(holeRim);
-              
-            } else if (player.team === 'df-node') {
-              const hitArea = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
-              hitArea.setAttribute('r', '16'); hitArea.setAttribute('fill', 'transparent'); 
-              group.appendChild(hitArea);
-              const circle = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
-              circle.setAttribute('r', '5'); circle.setAttribute('fill', '#3b82f6'); circle.setAttribute('stroke', 'white'); circle.setAttribute('stroke-width', '1.5');
-              group.appendChild(circle);
-            } else {
-              const isBall = player.team === 'ball';
-              const radius = isBall ? 10 : 16; 
-              let fill = '#ef4444'; if (isBall) fill = '#fde047'; else if (player.team === 'B') fill = '#3b82f6';
-              
-              const shadow = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
-              shadow.setAttribute('r', radius); shadow.setAttribute('cy', '3'); shadow.setAttribute('fill', 'rgba(0,0,0,0.3)');
-              group.appendChild(shadow);
-
-              const circle = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
-              circle.setAttribute('r', radius); circle.setAttribute('fill', fill); circle.setAttribute('stroke', 'white'); circle.setAttribute('stroke-width', '2');
-              group.appendChild(circle);
-
-              const text = document.createElementNS('http://www.w3.org/2000/svg', 'text');
-              text.setAttribute('x', '0'); 
-              text.setAttribute('y', '4'); 
-              text.setAttribute('text-anchor', 'middle');
-              text.setAttribute('fill', isBall ? 'black' : 'white'); 
-              text.setAttribute('font-size', isBall ? '14' : '12');
-              text.setAttribute('letter-spacing', '-0.5');
-              text.setAttribute('class', 'player-label'); 
-              text.textContent = player.label;
-              group.appendChild(text);
-            }
-            group.addEventListener('mousedown', startPlayerDrag);
-            group.addEventListener('touchstart', startPlayerDrag, { passive: false });
-          } else {
-            const textEl = group.querySelector('.player-label');
-            if (textEl && player.team !== 'cone' && player.team !== 'marker' && player.team !== 'df-node') {
-              textEl.textContent = player.label;
-            }
-          }
-          playersLayer.appendChild(group);
-          group.style.transform = `translate(${player.x}px, ${player.y}px)`;
-        });
-        updateDfLines();
-      }
-
-      function startPlayerDrag(evt) {
-        if (mode !== 'move' || isPlayingAnim) return;
-        evt.preventDefault();
-        evt.stopPropagation();
-        dragStartTime = Date.now();
-        const target = evt.currentTarget;
-        const player = players.find(p => p.id === target.dataset.id);
-        if (!player) return;
-        draggingElement = { group: target, id: player.id, player: player, isMoved: false };
-        const mousePos = getMousePosition(evt);
-        offset.x = mousePos.x - player.x;
-        offset.y = mousePos.y - player.y;
-        target.setAttribute('opacity', '0.8');
-        if (player.team !== 'df-node') playersLayer.appendChild(target);
-      }
-
-      function dragPlayer(evt) {
-        if (!draggingElement || mode !== 'move') return;
-        evt.preventDefault();
-        draggingElement.isMoved = true;
-        const mousePos = getMousePosition(evt);
-        const newX = mousePos.x - offset.x;
-        const newY = mousePos.y - offset.y;
-        
-        draggingElement.player.x = newX;
-        draggingElement.player.y = newY;
-        draggingElement.group.style.transform = `translate(${newX}px, ${newY}px)`;
-
-        if (draggingElement.player.team === 'df-node') {
-          draggingElement.player.bindTo = null; 
-          updateDfLines();
-        } else {
-          let needUpdateLines = false;
-          players.forEach(p => {
-            if (p.team === 'df-node' && p.bindTo === draggingElement.player.id) {
-              p.x = newX;
-              p.y = newY;
-              const g = playersLayer.querySelector(`g[data-id="${p.id}"]`);
-              if (g) g.style.transform = `translate(${newX}px, ${newY}px)`;
-              needUpdateLines = true;
-            }
-          });
-          if (needUpdateLines) updateDfLines();
-        }
-      }
-
-      function endPlayerDrag(evt) {
-        if (!draggingElement) return;
-        draggingElement.group.setAttribute('opacity', '100');
-        const { id, player, isMoved } = draggingElement;
-        draggingElement = null;
-
-        if (!isMoved && (Date.now() - dragStartTime) < 300) {
-          openNameModal(id);
-          return;
-        }
-
-        if (player.team === 'df-node') {
-          player.bindTo = null;
-          for (let p of players) {
-            if ((p.team === 'A' || p.team === 'B') && p.id !== player.id) {
-              const dx = p.x - player.x;
-              const dy = p.y - player.y;
-              if (Math.sqrt(dx * dx + dy * dy) < 25) {
-                player.bindTo = p.id;
-                player.x = p.x;
-                player.y = p.y;
-                const group = playersLayer.querySelector(`g[data-id="${player.id}"]`);
-                if (group) group.style.transform = `translate(${player.x}px, ${player.y}px)`;
-                break;
-              }
-            }
-          }
-          renderPlayers();
-        }
-
-        if (player.team !== 'ball' && (player.x < -150 || player.x > 1050 || player.y < -150 || player.y > 1050)) {
-          if (player.team === 'df-node') {
-            players = players.filter(p => p.groupId !== player.groupId);
-          } else {
-            players = players.filter(p => p.id !== id);
-            players.forEach(p => { if (p.bindTo === id) p.bindTo = null; });
-          }
-          renderPlayers();
-        }
-      }
-
-      window.addEventListener('mousemove', dragPlayer);
-      window.addEventListener('touchmove', dragPlayer, { passive: false });
-      window.addEventListener('mouseup', endPlayerDrag);
-      window.addEventListener('touchend', endPlayerDrag);
-
-      let scenes = [];
-      let isPlayingAnim = false;
-      const sceneCountEl = document.getElementById('scene-count');
-      const btnRecord = document.getElementById('record-scene-btn');
-      const btnPlay = document.getElementById('play-anim-btn');
-      const btnClearAnim = document.getElementById('clear-anim-btn');
-
-      btnRecord.addEventListener('click', () => {
-        if (isPlayingAnim) return;
-        scenes.push(JSON.parse(JSON.stringify(players)));
-        sceneCountEl.textContent = scenes.length;
-        btnRecord.classList.add('bg-red-200');
-        setTimeout(() => btnRecord.classList.remove('bg-red-200'), 200);
-      });
-
-      btnClearAnim.addEventListener('click', () => {
-        if (isPlayingAnim) return;
-        scenes = [];
-        sceneCountEl.textContent = '0';
-      });
-
-      btnPlay.addEventListener('click', async () => {
-        if (isPlayingAnim) return;
-        if (scenes.length < 2) {
-          alert("アニメーションを再生するには、シーンを2つ以上記録してください。\n\n1. 配置を決めて「⏺ 記録」を押す\n2. 駒を動かす\n3. 再度「⏺ 記録」を押す\n4. 「▶ 再生」で動きます！");
-          return;
-        }
-        isPlayingAnim = true;
-        btnPlay.innerHTML = '⏳ 再生中...';
-        btnPlay.classList.add('opacity-50', 'cursor-not-allowed');
-
-        players = JSON.parse(JSON.stringify(scenes[0]));
-        renderPlayers();
-        await new Promise(resolve => requestAnimationFrame(resolve));
-
-        for (let i = 1; i < scenes.length; i++) {
-          await new Promise(resolve => setTimeout(resolve, 300)); 
-          const startScene = JSON.parse(JSON.stringify(players));
-          const endScene = scenes[i];
-          const duration = 1200; 
-          
-          await new Promise(resolve => {
-            let startTime = null;
-            function step(timestamp) {
-              if (!startTime) startTime = timestamp;
-              let progress = (timestamp - startTime) / duration;
-              if (progress > 1) progress = 1;
-              const ease = progress < 0.5 ? 2 * progress * progress : -1 + (4 - 2 * progress) * progress;
-              
-              players = JSON.parse(JSON.stringify(endScene));
-              players.forEach(p => {
-                const startP = startScene.find(sp => sp.id === p.id);
-                const endP = endScene.find(ep => ep.id === p.id);
-                if (startP && endP) {
-                  p.x = startP.x + (endP.x - startP.x) * ease;
-                  p.y = startP.y + (endP.y - startP.y) * ease;
-                }
-              });
-              renderPlayers();
-              if (progress < 1) requestAnimationFrame(step);
-              else resolve();
-            }
-            requestAnimationFrame(step);
-          });
-        }
-        isPlayingAnim = false;
-        btnPlay.innerHTML = '▶ 再生';
-        btnPlay.classList.remove('opacity-50', 'cursor-not-allowed');
-      });
-
-      document.getElementById('reset-btn').addEventListener('click', () => {
-        const val = document.getElementById('view-select').value;
-        if (val === 'full-h') players = JSON.parse(JSON.stringify(defaultPlayersFullH));
-        else if (val === 'full-v') players = JSON.parse(JSON.stringify(defaultPlayersFullV));
-        else players = JSON.parse(JSON.stringify(defaultPlayersHalf));
-        drawLayer.innerHTML = ''; 
-        scenes = []; 
-        sceneCountEl.textContent = '0';
-        renderPlayers();
-      });
-      
-      function getAddPosition() {
-        const val = document.getElementById('view-select').value;
-        if (val === 'full-h') return { x: 400 + (Math.random() * 40 - 20), y: 200 + (Math.random() * 40 - 20) };
-        if (val === 'full-v') return { x: 200 + (Math.random() * 40 - 20), y: 400 + (Math.random() * 40 - 20) };
-        return { x: 200 + (Math.random() * 40 - 20), y: 200 + (Math.random() * 40 - 20) };
-      }
-
-      document.getElementById('add-a-btn').addEventListener('click', () => { const p = getAddPosition(); players.push({ id: `new_${nextId++}`, team: 'A', label: '+', x: p.x, y: p.y }); renderPlayers(); });
-      document.getElementById('add-b-btn').addEventListener('click', () => { const p = getAddPosition(); players.push({ id: `new_${nextId++}`, team: 'B', label: '+', x: p.x, y: p.y }); renderPlayers(); });
-      document.getElementById('add-cone-btn').addEventListener('click', () => { const p = getAddPosition(); players.push({ id: `new_${nextId++}`, team: 'cone', label: '', x: p.x, y: p.y }); renderPlayers(); });
-      document.getElementById('add-marker-btn').addEventListener('click', () => { const p = getAddPosition(); players.push({ id: `new_${nextId++}`, team: 'marker', label: '', x: p.x, y: p.y }); renderPlayers(); });
-      document.getElementById('add-df-line-btn').addEventListener('click', () => { 
-        const gId = `dfl_${nextId++}`;
-        const p = getAddPosition();
-        players.push({ id: `${gId}_1`, team: 'df-node', groupId: gId, label: '', x: p.x - 50, y: p.y }); 
-        players.push({ id: `${gId}_2`, team: 'df-node', groupId: gId, label: '', x: p.x + 50, y: p.y }); 
-        renderPlayers(); 
-      });
-
-      const modal = document.getElementById('name-modal');
-      const nameInput = document.getElementById('name-input');
-      function openNameModal(id) {
-        const player = players.find(p => p.id === id);
-        if (!player || player.team === 'ball' || player.team === 'cone' || player.team === 'marker' || player.team === 'df-node') return;
-        editingPlayerId = id; nameInput.value = player.label; modal.classList.remove('hidden'); 
-        setTimeout(() => { nameInput.focus(); nameInput.select(); }, 50);
-      }
-      function closeModal() { modal.classList.add('hidden'); editingPlayerId = null; }
-      function saveName() {
-        if (editingPlayerId) {
-          const player = players.find(p => p.id === editingPlayerId);
-          if (player) { player.label = nameInput.value.trim() || ' '; renderPlayers(); }
-        }
-        closeModal();
-      }
-      document.getElementById('modal-cancel').addEventListener('click', closeModal);
-      document.getElementById('modal-save').addEventListener('click', saveName);
-      nameInput.addEventListener('keydown', (e) => { if (e.key === 'Enter') saveName(); if (e.key === 'Escape') closeModal(); });
-
-      // 初期起動
-      players = JSON.parse(JSON.stringify(defaultPlayersFullH));
-      renderPlayers();
-    });
-  </script>
+(() => {
+'use strict';
+const $=id=>document.getElementById(id), svg=$('board'), layer=$('players-layer'), draw=$('draw-layer'), df=$('df-lines-layer');
+const NS='http://www.w3.org/2000/svg', KEY='its_handball_board_v2';
+const clone=o=>JSON.parse(JSON.stringify(o));
+const base={
+ 'full-h':[{team:'A',label:'GK',x:20,y:200},{team:'A',label:'LW',x:130,y:60},{team:'A',label:'LB',x:150,y:120},{team:'A',label:'CB',x:150,y:200},{team:'A',label:'RB',x:150,y:280},{team:'A',label:'RW',x:130,y:340},{team:'A',label:'PV',x:130,y:160},{team:'B',label:'GK',x:780,y:200},{team:'B',label:'RW',x:670,y:40},{team:'B',label:'RB',x:650,y:100},{team:'B',label:'CB',x:650,y:200},{team:'B',label:'LB',x:650,y:300},{team:'B',label:'LW',x:670,y:360},{team:'B',label:'PV',x:670,y:240},{team:'ball',label:'●',x:400,y:200}],
+ 'full-v':[{team:'A',label:'GK',x:200,y:780},{team:'A',label:'LW',x:60,y:670},{team:'A',label:'LB',x:120,y:650},{team:'A',label:'CB',x:200,y:650},{team:'A',label:'RB',x:280,y:650},{team:'A',label:'RW',x:340,y:670},{team:'A',label:'PV',x:200,y:670},{team:'B',label:'GK',x:200,y:20},{team:'B',label:'RW',x:40,y:130},{team:'B',label:'RB',x:100,y:150},{team:'B',label:'CB',x:200,y:150},{team:'B',label:'LB',x:300,y:150},{team:'B',label:'LW',x:360,y:130},{team:'B',label:'PV',x:200,y:130},{team:'ball',label:'●',x:200,y:400}],
+ 'half':[{team:'A',label:'GK',x:200,y:20},{team:'A',label:'LW',x:70,y:110},{team:'A',label:'LB',x:130,y:130},{team:'A',label:'CB',x:200,y:140},{team:'A',label:'RB',x:270,y:130},{team:'A',label:'RW',x:330,y:110},{team:'A',label:'PV',x:200,y:110},{team:'B',label:'GK',x:200,y:380},{team:'B',label:'LW',x:40,y:300},{team:'B',label:'LB',x:120,y:250},{team:'B',label:'CB',x:200,y:270},{team:'B',label:'RB',x:280,y:250},{team:'B',label:'RW',x:360,y:300},{team:'B',label:'PV',x:200,y:160},{team:'ball',label:'●',x:200,y:240}]
+};
+const defaults=view=>base[view].map((p,i)=>({...p,id:p.team==='ball'?'ball':p.team.toLowerCase()+(i+1)}));
+let state={view:'full-h',players:defaults('full-h'),paths:[],scenes:[],nextId:100},mode='move',history=[],future=[],active=null,playing=false,playToken=0,sceneIndex=-1,editingId=null,dirty=false;
+function status(t){$('status').textContent=t}
+function snapshot(){return clone(state)}
+function persist(){try{localStorage.setItem(KEY,JSON.stringify(state));status('自動保存済み')}catch(e){status('保存不可：JSON出力を使用してください')}}
+function checkpoint(){history.push(snapshot());if(history.length>80)history.shift();future=[]}
+function commit(){dirty=true;persist();render()}
+function apply(s){state=clone(s);sceneIndex=-1;persist();render()}
+function undo(){if(!history.length||playing)return;future.push(snapshot());apply(history.pop())}
+function redo(){if(!future.length||playing)return;history.push(snapshot());apply(future.pop())}
+function valid(s){return s&&['full-h','full-v','half'].includes(s.view)&&Array.isArray(s.players)&&s.players.length<=500&&s.players.every(p=>typeof p.id==='string'&&typeof p.team==='string'&&Number.isFinite(p.x)&&Number.isFinite(p.y)&&typeof p.label==='string')&&Array.isArray(s.paths)&&s.paths.length<=2000&&s.paths.every(p=>typeof p.d==='string'&&p.d.length<100000&&['red','blue'].includes(p.color))&&Array.isArray(s.scenes)&&s.scenes.length<=200&&s.scenes.every(c=>Array.isArray(c.players)&&Array.isArray(c.paths))&&Number.isInteger(s.nextId)}
+function view(){const v=state.view;$('view-select').value=v;['full-h','full-v','half'].forEach(k=>{$('court-'+k).style.display=k===v?'block':'none'});svg.setAttribute('viewBox',v==='full-h'?'-25 -15 850 430':v==='full-v'?'-15 -25 430 850':'-15 -25 430 440')}
+function el(tag,attrs={},parent){let n=document.createElementNS(NS,tag);Object.entries(attrs).forEach(([k,v])=>n.setAttribute(k,v));if(parent)parent.appendChild(n);return n}
+function render(){view();layer.replaceChildren();df.replaceChildren();draw.replaceChildren();for(const p of state.paths){el('path',{d:p.d,fill:'none',stroke:p.color==='red'?'#ef4444':'#3b82f6','stroke-width':p.style==='shot'?6:4,'stroke-dasharray':p.style==='pass'?'9 7':'', 'stroke-linecap':'round','stroke-linejoin':'round','marker-end':`url(#arrow-${p.color})`,opacity:'.85'},draw)}
+ const groups={};for(const p of state.players.filter(p=>p.team==='df-node'))(groups[p.groupId]??=[]).push(p);for(const nodes of Object.values(groups)){if(nodes.length===2)el('line',{x1:nodes[0].x,y1:nodes[0].y,x2:nodes[1].x,y2:nodes[1].y,stroke:'#3b82f6','stroke-opacity':'.4','stroke-width':14,'stroke-linecap':'round'},df)}
+ for(const p of state.players){const g=el('g',{'data-id':p.id,transform:`translate(${p.x} ${p.y})`,class:'piece-group',style:'cursor:grab'},layer);if(p.team==='df-node'){el('circle',{r:15,fill:'transparent'},g);el('circle',{r:5,fill:'#3b82f6',stroke:'white'},g)}else if(p.team==='cone'){el('path',{d:'M -10 10 L 0 -13 L 10 10 Z',fill:'#f97316',stroke:'white'},g)}else if(p.team==='marker'){el('circle',{r:12,fill:'#eab308',stroke:'white'},g)}else{const ball=p.team==='ball';el('circle',{r:ball?11:16,fill:ball?'#facc15':p.team==='A'?'#ef4444':'#3b82f6',stroke:'white','stroke-width':2},g);const t=el('text',{x:0,y:4,'text-anchor':'middle',fill:ball?'#111':'white','font-size':p.label.length>3?9:12,'font-weight':'bold','pointer-events':'none'},g);t.textContent=p.label} }
+ $('scene-count').textContent=state.scenes.length;$('undo-btn').disabled=!history.length;$('redo-btn').disabled=!future.length;
+}
+function pos(e){const pt=svg.createSVGPoint();pt.x=e.clientX;pt.y=e.clientY;const m=svg.getScreenCTM();if(!m)return{x:0,y:0};const q=pt.matrixTransform(m.inverse());return{x:q.x,y:q.y}}
+function bounds(p){const [w,h]=state.view==='full-h'?[800,400]:state.view==='full-v'?[400,800]:[400,400];return{x:Math.max(-22,Math.min(w+22,p.x)),y:Math.max(-22,Math.min(h+22,p.y))}}
+function setMode(m){mode=m;['move','draw-red','draw-blue'].forEach(x=>$('mode-'+x).classList.toggle('active',x===m));svg.style.cursor=m==='move'?'default':'crosshair'}
+svg.addEventListener('pointerdown',e=>{if(playing||e.button!==0)return;const target=e.target.closest?.('.piece-group');const p=target&&state.players.find(x=>x.id===target.dataset.id);if(mode==='move'&&!p)return;checkpoint();const at=pos(e);active={id:e.pointerId,start:at,moved:false,player:mode==='move'?p:null,offset:p?{x:at.x-p.x,y:at.y-p.y}:null,points:mode==='move'?null:[at]};svg.setPointerCapture(e.pointerId);e.preventDefault()});
+svg.addEventListener('pointermove',e=>{if(!active||active.id!==e.pointerId)return;const at=pos(e);if(Math.hypot(at.x-active.start.x,at.y-active.start.y)>3)active.moved=true;if(active.player){const p=active.player,q=bounds({x:at.x-active.offset.x,y:at.y-active.offset.y});p.x=q.x;p.y=q.y;if(p.team==='df-node')p.bindTo=null;else state.players.filter(n=>n.team==='df-node'&&n.bindTo===p.id).forEach(n=>{n.x=p.x;n.y=p.y});render()}else{active.points.push(at);const color=mode==='draw-red'?'red':'blue';const d=active.points.map((q,i)=>`${i?'L':'M'} ${q.x.toFixed(1)} ${q.y.toFixed(1)}`).join(' ');const prev=draw.querySelector('[data-preview]');if(prev)prev.remove();el('path',{'data-preview':'1',d,fill:'none',stroke:color==='red'?'#ef4444':'#3b82f6','stroke-width':4,'stroke-linecap':'round'},draw)}e.preventDefault()});
+function endPointer(e,cancel=false){if(!active||active.id!==e.pointerId)return;const a=active;active=null;try{svg.releasePointerCapture(e.pointerId)}catch{}if(cancel){apply(history.pop());return}if(a.player){if(!a.moved&&a.player.team!=='ball'&&!['cone','marker','df-node'].includes(a.player.team)){history.pop();openModal(a.player.id);return}if(a.player.team==='df-node'){a.player.bindTo=null;for(const p of state.players){if(['A','B'].includes(p.team)&&Math.hypot(p.x-a.player.x,p.y-a.player.y)<25){a.player.bindTo=p.id;a.player.x=p.x;a.player.y=p.y;break}}}}else if(a.points.length>1){state.paths.push({d:a.points.map((q,i)=>`${i?'L':'M'} ${q.x.toFixed(1)} ${q.y.toFixed(1)}`).join(' '),color:mode==='draw-red'?'red':'blue',style:$('line-style').value})}else{history.pop();render();return}commit()}
+svg.addEventListener('pointerup',e=>endPointer(e));svg.addEventListener('pointercancel',e=>endPointer(e,true));
+function add(team){if(playing)return;checkpoint();const [x,y]=state.view==='full-h'?[400,200]:state.view==='full-v'?[200,400]:[200,200];const id=state.nextId++;if(team==='df-node'){const groupId='df_'+id;state.players.push({id:groupId+'_1',team,groupId,label:'',x:x-50,y},{id:groupId+'_2',team,groupId,label:'',x:x+50,y})}else state.players.push({id:'new_'+id,team,label:team==='A'||team==='B'?'+':'',x,y});commit()}
+function openModal(id){editingId=id;const p=state.players.find(x=>x.id===id);$('name-input').value=p?.label||'';$('name-modal').classList.remove('hidden');$('name-input').focus()}
+function closeModal(){$('name-modal').classList.add('hidden');editingId=null}
+function saveName(){if(editingId){checkpoint();const p=state.players.find(x=>x.id===editingId);if(p)p.label=$('name-input').value.trim().slice(0,8)||' ';commit()}closeModal()}
+function stop(){playToken++;playing=false;$('play-anim-btn').textContent='▶ 再生';status('再生停止')}
+const sleep=ms=>new Promise(r=>setTimeout(r,ms));
+async function play(){if(playing)return;if(state.scenes.length<2){alert('2シーン以上記録してください');return}playing=true;const token=++playToken,original=snapshot(),scenes=clone(state.scenes),speed=Number($('speed-select').value);$('play-anim-btn').textContent='再生中…';for(let i=0;i<scenes.length&&token===playToken;i++){const target=scenes[i];if(i===0){state.players=clone(target.players);state.paths=clone(target.paths);render();await sleep(250/speed);continue}const start=clone(state.players),duration=1200/speed,t0=performance.now();while(token===playToken){const t=Math.min(1,(performance.now()-t0)/duration),ease=t*t*(3-2*t);state.players=target.players.map(p=>{const a=start.find(x=>x.id===p.id);return a?{...p,x:a.x+(p.x-a.x)*ease,y:a.y+(p.y-a.y)*ease}:clone(p)});state.paths=clone(target.paths);render();if(t>=1)break;await new Promise(requestAnimationFrame)}sceneIndex=i}if(token===playToken){state.players=clone(original.players);state.paths=clone(original.paths);playing=false;$('play-anim-btn').textContent='▶ 再生';render();status('再生終了（元の配置に復元）')}else{state.players=clone(original.players);state.paths=clone(original.paths);render()}}
+function selectScene(delta){if(playing||!state.scenes.length)return;sceneIndex=(sceneIndex+delta+state.scenes.length)%state.scenes.length;checkpoint();state.players=clone(state.scenes[sceneIndex].players);state.paths=clone(state.scenes[sceneIndex].paths);commit();status(`シーン ${sceneIndex+1}/${state.scenes.length}`)}
+function download(blob,name){const url=URL.createObjectURL(blob),a=document.createElement('a');a.href=url;a.download=name;a.click();setTimeout(()=>URL.revokeObjectURL(url),1500)}
+function exportJSON(){download(new Blob([JSON.stringify({format:'ITS-HB-V2',...state},null,2)],{type:'application/json'}),'handball-tactics-v2.json')}
+function exportPNG(){const copy=svg.cloneNode(true);copy.setAttribute('xmlns',NS);copy.setAttribute('width',state.view==='full-h'?1200:800);copy.setAttribute('height',state.view==='full-v'?1600:state.view==='full-h'?645:880);const xml=new XMLSerializer().serializeToString(copy);const img=new Image(),url=URL.createObjectURL(new Blob([xml],{type:'image/svg+xml'}));img.onload=()=>{const c=document.createElement('canvas');c.width=img.width;c.height=img.height;const ctx=c.getContext('2d');ctx.drawImage(img,0,0);c.toBlob(b=>{if(b)download(b,'handball-tactics-v2.png');else alert('PNG出力に失敗しました')},'image/png');URL.revokeObjectURL(url)};img.onerror=()=>{URL.revokeObjectURL(url);alert('画像変換に失敗しました')};img.src=url}
+function template(kind){if(!kind||playing)return;checkpoint();const v=state.view,w=v==='full-h'?800:400,h=v==='full-v'?800:400;const defenders=state.players.filter(p=>p.team==='B'&&p.label!=='GK');const positions=kind==='6-0'?[[-.34,.22],[-.2,.27],[-.07,.29],[.07,.29],[.2,.27],[.34,.22]]:kind==='5-1'?[[-.34,.22],[-.17,.27],[0,.29],[.17,.27],[.34,.22],[0,.47]]:[[-.32,.2],[0,.25],[.32,.2],[-.18,.44],[.18,.44],[0,.60]];if(kind==='7attack'){const g=state.players.find(p=>p.team==='A'&&p.label==='GK');if(g){g.label='7th';g.x=w*.5;g.y=h*.55}}else defenders.forEach((p,i)=>{const [dx,dy]=positions[i%positions.length];if(v==='full-h'){p.x=w*.76+dx*140;p.y=h*.5+dy*200-50}else{p.x=w*.5+dx*280;p.y=h*.23+dy*180}});commit();$('template-select').value=''}
+function bind(id,fn){$(id).addEventListener('click',fn)}
+bind('undo-btn',undo);bind('redo-btn',redo);bind('mode-move',()=>setMode('move'));bind('mode-draw-red',()=>setMode('draw-red'));bind('mode-draw-blue',()=>setMode('draw-blue'));
+for(const [id,t] of [['add-a-btn','A'],['add-b-btn','B'],['add-cone-btn','cone'],['add-marker-btn','marker'],['add-df-line-btn','df-node']])bind(id,()=>add(t));
+bind('clear-lines-btn',()=>{if(playing)return;checkpoint();state.paths=[];state.players=state.players.filter(p=>p.team!=='df-node');commit()});
+bind('reset-btn',()=>{if(playing)return;if(!confirm('現在の配置・描画・シーンを初期化しますか？（自動保存も更新されます）'))return;checkpoint();state.players=defaults(state.view);state.paths=[];state.scenes=[];commit()});
+$('view-select').addEventListener('change',e=>{const next=e.target.value;if(playing){e.target.value=state.view;return}if(!confirm('コートを切り替えると現在の配置・描画・シーンが初期化されます。続けますか？')){e.target.value=state.view;return}checkpoint();state.view=next;state.players=defaults(next);state.paths=[];state.scenes=[];commit()});
+$('template-select').addEventListener('change',e=>template(e.target.value));
+bind('record-scene-btn',()=>{if(playing)return;checkpoint();state.scenes.push({players:clone(state.players),paths:clone(state.paths)});commit();status(`シーン ${state.scenes.length} 記録済み`)});
+bind('clear-anim-btn',()=>{if(playing)return;if(!confirm('すべてのシーンを削除しますか？'))return;checkpoint();state.scenes=[];commit()});
+bind('play-anim-btn',play);bind('stop-btn',stop);bind('prev-scene',()=>selectScene(-1));bind('next-scene',()=>selectScene(1));
+bind('modal-cancel',closeModal);bind('modal-save',saveName);$('name-input').addEventListener('keydown',e=>{if(e.key==='Enter')saveName();if(e.key==='Escape')closeModal()});
+bind('save-btn',exportJSON);bind('load-btn',()=>$('load-file').click());$('load-file').addEventListener('change',async e=>{const file=e.target.files[0];if(!file)return;try{const obj=JSON.parse(await file.text());if(!valid(obj))throw Error('データ形式が不正です');if(!confirm('現在の作戦を読み込んだデータで置き換えますか？'))return;stop();checkpoint();apply({view:obj.view,players:obj.players,paths:obj.paths,scenes:obj.scenes,nextId:obj.nextId});status('JSONを読み込みました')}catch(err){alert('読込エラー: '+err.message)}finally{e.target.value=''}});
+bind('png-btn',exportPNG);bind('fullscreen-btn',()=>{if(!document.fullscreenElement)document.documentElement.requestFullscreen?.();else document.exitFullscreen?.()});
+window.addEventListener('keydown',e=>{if(['INPUT','SELECT','TEXTAREA'].includes(document.activeElement.tagName))return;if((e.ctrlKey||e.metaKey)&&e.key.toLowerCase()==='z'){e.preventDefault();e.shiftKey?redo():undo()}else if((e.ctrlKey||e.metaKey)&&e.key.toLowerCase()==='y'){e.preventDefault();redo()}});
+try{const saved=JSON.parse(localStorage.getItem(KEY));if(valid(saved))state={view:saved.view,players:saved.players,paths:saved.paths,scenes:saved.scenes,nextId:saved.nextId}}catch(e){status('保存データの読込に失敗')}
+render();window.__boardV2={getState:()=>clone(state),undo,redo,add,record:()=>$('record-scene-btn').click(),reset:()=>$('reset-btn').click()};
+})();
+</script>
 </body>
 </html>
