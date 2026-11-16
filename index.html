@@ -24,63 +24,39 @@
     .v2-btn:focus-visible, button:focus-visible {outline:2px solid #2563eb;outline-offset:2px}
     #board {touch-action:none}
     @media(max-width:640px){#v2-tools {max-height:100px;overflow-y:auto} .v2-btn{min-height:36px}}
+    .compact-header{background:#fff;z-index:20;flex-shrink:0;box-shadow:0 2px 8px #0002;font-family:system-ui,sans-serif}
+    .primary-bar,.secondary-bar{display:flex;align-items:center;gap:5px;padding:5px 8px;overflow-x:auto;white-space:nowrap}
+    .primary-bar button,.primary-bar select,.secondary-bar select,#tools-panel button,#tools-panel select{font-size:12px;border:1px solid #cbd5e1;border-radius:7px;background:#f8fafc;padding:7px 9px;min-height:34px;cursor:pointer;color:#1e293b}
+    .primary-bar .brand{font-size:13px;letter-spacing:.5px;color:#1e293b;margin-right:5px}.brand span{color:#2563eb}
+    .primary-bar .active{background:#dbeafe;border-color:#3b82f6}.primary-bar .play-btn{background:#16a34a;color:white;border-color:#16a34a}
+    #tools-toggle{margin-left:auto;background:#e0e7ff!important;font-weight:700}
+    .secondary-bar{padding-top:0;padding-bottom:4px;justify-content:space-between;font-size:11px;color:#475569}
+    .secondary-bar select{padding:3px 5px;min-height:25px}
+    #tools-panel{padding:8px;max-height:36vh;overflow-y:auto;border-top:1px solid #ddd;background:#f8fafc}
+    #tools-panel[hidden]{display:none!important}#tools-panel section{display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin-bottom:7px}#tools-panel section b{font-size:11px;min-width:85px;color:#475569}
+    @media(max-width:640px){.brand{display:none}.primary-bar{gap:3px}.primary-bar button,.primary-bar select{padding:6px;font-size:11px}}
   </style>
 </head>
 <body class="bg-gray-100 h-screen w-screen overflow-hidden flex flex-col font-sans text-gray-800 touch-none select-none">
 
-  <header class="bg-white shadow-sm z-20 flex-shrink-0 border-b border-gray-200">
-    <div class="px-1 py-1 flex items-center justify-start gap-1 overflow-x-auto hide-scrollbar whitespace-nowrap responsive-header">
-      
-      <select id="view-select" class="text-xs bg-gray-100 border border-gray-300 rounded px-1 py-1 font-bold text-gray-700 focus:outline-none cursor-pointer shrink-0">
-        <option value="full-h">フル(横)</option>
-        <option value="full-v">フル(縦)</option>
-        <option value="half">ハーフ</option>
-      </select>
-
-      <div class="w-px h-4 bg-gray-300 mx-0.5 shrink-0 separator"></div>
-
-      <div class="flex items-center gap-1 shrink-0">
-        <button id="add-a-btn" class="px-1.5 py-1 bg-red-100 text-red-700 rounded text-xs font-bold shadow-sm border border-red-200">+赤</button>
-        <button id="add-b-btn" class="px-1.5 py-1 bg-blue-100 text-blue-700 rounded text-xs font-bold shadow-sm border border-blue-200">+青</button>
-        <button id="add-df-line-btn" class="px-1.5 py-1 bg-indigo-100 text-indigo-700 rounded text-xs font-bold shadow-sm border border-indigo-200">+DFライン</button>
-        <button id="add-cone-btn" class="px-1.5 py-1 bg-orange-100 text-orange-700 rounded text-xs font-bold shadow-sm border border-orange-200">+🔺</button>
-        <button id="add-marker-btn" class="px-1.5 py-1 bg-yellow-100 text-yellow-700 rounded text-xs font-bold shadow-sm border border-yellow-300">+🟡</button>
-        <button id="reset-btn" class="px-1.5 py-1 bg-gray-100 text-gray-700 rounded text-xs font-bold shadow-sm border border-gray-300 ml-0.5">初期化</button>
-      </div>
-
-      <div class="w-px h-4 bg-gray-300 mx-0.5 shrink-0 separator"></div>
-
-      <div class="flex items-center gap-1 bg-gray-50 p-0.5 rounded border border-gray-200 shrink-0">
-        <button id="mode-move" class="tool-btn active px-1.5 py-1 bg-white border border-gray-300 rounded text-xs font-bold flex items-center">👆</button>
-        <button id="mode-draw-red" class="tool-btn px-1.5 py-1 bg-white border border-gray-300 rounded flex items-center justify-center" title="赤ペン">
-          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#ef4444" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21.174 6.812a1 1 0 0 0-3.986-3.987L3.842 16.174a2 2 0 0 0-.5.83l-1.321 4.352a.5.5 0 0 0 .623.622l4.353-1.32a2 2 0 0 0 .83-.497z"/><path d="m15 5 4 4"/></svg>
-        </button>
-        <button id="mode-draw-blue" class="tool-btn px-1.5 py-1 bg-white border border-gray-300 rounded flex items-center justify-center" title="青ペン">
-          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#3b82f6" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21.174 6.812a1 1 0 0 0-3.986-3.987L3.842 16.174a2 2 0 0 0-.5.83l-1.321 4.352a.5.5 0 0 0 .623.622l4.353-1.32a2 2 0 0 0 .83-.497z"/><path d="m15 5 4 4"/></svg>
-        </button>
-        <div class="w-px h-4 bg-gray-300 mx-0.5"></div>
-        <button id="clear-lines-btn" class="px-1.5 py-1 bg-gray-200 text-gray-700 rounded text-xs font-bold">🗑️</button>
-      </div>
-
-      <div class="w-px h-4 bg-gray-300 mx-0.5 shrink-0 separator"></div>
-
-      <div class="flex items-center gap-1 bg-green-50 p-0.5 rounded border border-green-200 shrink-0 pr-2">
-        <button id="record-scene-btn" class="px-1.5 py-1 bg-white border border-red-300 text-red-600 rounded text-[10px] font-bold shadow-sm flex items-center gap-0.5">
-          ⏺ <span id="scene-count" class="bg-red-500 text-white px-1 py-0.5 rounded-full text-[9px] leading-none">0</span>
-        </button>
-        <button id="play-anim-btn" class="px-2 py-1 bg-green-500 text-white rounded text-[10px] font-bold shadow-sm">▶ 再生</button>
-        <button id="clear-anim-btn" class="px-1.5 py-1 bg-white border border-gray-300 text-gray-600 rounded text-[10px] font-bold shadow-sm">🗑️</button>
-      </div>
-      <div class="px-2 pb-1 flex flex-wrap gap-1 items-center text-xs" id="v2-tools">
-        <button id="undo-btn" class="v2-btn">↶ 戻す</button><button id="redo-btn" class="v2-btn">↷ やり直す</button>
-        <select id="template-select" class="v2-btn" aria-label="戦術テンプレート"><option value="">戦術テンプレート</option><option value="6-0">6-0 DF</option><option value="5-1">5-1 DF</option><option value="3-2-1">3-2-1 DF</option><option value="7attack">7人攻撃</option></select>
-        <select id="line-style" class="v2-btn" aria-label="線種"><option value="move">移動（実線）</option><option value="pass">パス（破線）</option><option value="shot">シュート（太線）</option></select>
-        <button id="save-btn" class="v2-btn">保存 JSON</button><button id="load-btn" class="v2-btn">読込 JSON</button><input type="file" id="load-file" accept=".json,application/json" hidden>
-        <button id="png-btn" class="v2-btn">PNG出力</button><button id="fullscreen-btn" class="v2-btn">全画面</button>
-        <button id="prev-scene" class="v2-btn">◀ シーン</button><button id="next-scene" class="v2-btn">シーン ▶</button><button id="stop-btn" class="v2-btn">■ 停止</button>
-        <label class="flex items-center gap-1">速度 <select id="speed-select" class="v2-btn"><option value="0.5">0.5×</option><option value="1" selected>1×</option><option value="1.5">1.5×</option><option value="2">2×</option></select></label>
-        <span id="status" role="status" aria-live="polite" class="text-gray-600 ml-auto">自動保存 有効</span>
-      </div>
+  <header class="compact-header">
+    <div class="primary-bar">
+      <strong class="brand">ITS <span>TACTICS</span></strong>
+      <select id="view-select" aria-label="コート"><option value="full-h">フル横</option><option value="full-v">フル縦</option><option value="half">ハーフ</option></select>
+      <button id="mode-move" class="tool-btn active">☝ 移動</button>
+      <button id="mode-draw-red" class="tool-btn">✎ 赤線</button>
+      <button id="mode-draw-blue" class="tool-btn">✎ 青線</button>
+      <button id="undo-btn" title="戻す">↶</button><button id="redo-btn" title="やり直す">↷</button>
+      <button id="record-scene-btn" title="シーン記録">⏺ <span id="scene-count">0</span></button>
+      <button id="play-anim-btn" class="play-btn">▶ 再生</button>
+      <button id="tools-toggle" aria-expanded="false" aria-controls="tools-panel">☰ ツール</button>
+    </div>
+    <div class="secondary-bar"><label>駒の表示 <select id="piece-style"><option value="person">人形</option><option value="circle">丸駒</option></select></label><span id="status" role="status" aria-live="polite">自動保存 有効</span></div>
+    <div id="tools-panel" hidden>
+      <section><b>駒・備品</b><button id="add-a-btn">＋赤選手</button><button id="add-b-btn">＋青選手</button><button id="add-df-line-btn">＋DFライン</button><button id="add-cone-btn">＋コーン</button><button id="add-marker-btn">＋マーカー</button></section>
+      <section><b>作戦・描画</b><select id="template-select"><option value="">戦術テンプレート</option><option value="6-0">6-0 DF</option><option value="5-1">5-1 DF</option><option value="3-2-1">3-2-1 DF</option><option value="7attack">7人攻撃</option></select><select id="line-style"><option value="move">移動（実線）</option><option value="pass">パス（破線）</option><option value="shot">シュート（太線）</option></select><button id="clear-lines-btn">線・DFライン消去</button></section>
+      <section><b>シーン</b><button id="prev-scene">◀ 前</button><button id="next-scene">次 ▶</button><button id="stop-btn">■ 停止</button><button id="clear-anim-btn">シーン消去</button><label>速度 <select id="speed-select"><option value="0.5">0.5×</option><option value="1" selected>1×</option><option value="1.5">1.5×</option><option value="2">2×</option></select></label></section>
+      <section><b>ファイル・画面</b><button id="save-btn">JSON保存</button><button id="load-btn">JSON読込</button><input type="file" id="load-file" accept=".json,application/json" hidden><button id="png-btn">PNG出力</button><button id="fullscreen-btn">全画面</button><button id="reset-btn">初期化</button></section>
     </div>
   </header>
 
@@ -227,15 +203,15 @@ function view(){const v=state.view;$('view-select').value=v;['full-h','full-v','
 function el(tag,attrs={},parent){let n=document.createElementNS(NS,tag);Object.entries(attrs).forEach(([k,v])=>n.setAttribute(k,v));if(parent)parent.appendChild(n);return n}
 function render(){view();layer.replaceChildren();df.replaceChildren();draw.replaceChildren();for(const p of state.paths){el('path',{d:p.d,fill:'none',stroke:p.color==='red'?'#ef4444':'#3b82f6','stroke-width':p.style==='shot'?6:4,'stroke-dasharray':p.style==='pass'?'9 7':'', 'stroke-linecap':'round','stroke-linejoin':'round','marker-end':`url(#arrow-${p.color})`,opacity:'.85'},draw)}
  const groups={};for(const p of state.players.filter(p=>p.team==='df-node'))(groups[p.groupId]??=[]).push(p);for(const nodes of Object.values(groups)){if(nodes.length===2)el('line',{x1:nodes[0].x,y1:nodes[0].y,x2:nodes[1].x,y2:nodes[1].y,stroke:'#3b82f6','stroke-opacity':'.4','stroke-width':14,'stroke-linecap':'round'},df)}
- for(const p of state.players){const g=el('g',{'data-id':p.id,transform:`translate(${p.x} ${p.y})`,class:'piece-group',style:'cursor:grab'},layer);if(p.team==='df-node'){el('circle',{r:15,fill:'transparent'},g);el('circle',{r:5,fill:'#3b82f6',stroke:'white'},g)}else if(p.team==='cone'){el('path',{d:'M -10 10 L 0 -13 L 10 10 Z',fill:'#f97316',stroke:'white'},g)}else if(p.team==='marker'){el('circle',{r:12,fill:'#eab308',stroke:'white'},g)}else{const ball=p.team==='ball';el('circle',{r:ball?11:16,fill:ball?'#facc15':p.team==='A'?'#ef4444':'#3b82f6',stroke:'white','stroke-width':2},g);const t=el('text',{x:0,y:4,'text-anchor':'middle',fill:ball?'#111':'white','font-size':p.label.length>3?9:12,'font-weight':'bold','pointer-events':'none'},g);t.textContent=p.label} }
+ for(const p of state.players){const g=el('g',{'data-id':p.id,transform:`translate(${p.x} ${p.y})`,class:'piece-group',style:'cursor:grab'},layer);if(p.team==='df-node'){el('circle',{r:15,fill:'transparent'},g);el('circle',{r:5,fill:'#3b82f6',stroke:'white'},g)}else if(p.team==='cone'){el('path',{d:'M -10 10 L 0 -13 L 10 10 Z',fill:'#f97316',stroke:'white'},g)}else if(p.team==='marker'){el('circle',{r:12,fill:'#eab308',stroke:'white'},g)}else{const ball=p.team==='ball',person=!ball&&$('piece-style').value==='person',fill=ball?'#facc15':p.team==='A'?'#ef4444':'#3b82f6';if(person){el('circle',{cx:0,cy:-13,r:7,fill,stroke:'white','stroke-width':1.6},g);el('path',{d:'M -9 -3 Q 0 -7 9 -3 L 12 11 L 6 12 L 4 6 L 4 19 L -3 19 L -4 6 L -6 12 L -12 11 Z',fill,stroke:'white','stroke-width':1.4,'stroke-linejoin':'round'},g);el('rect',{x:-13,y:-27,width:26,height:10,rx:3,fill:'#111827',opacity:'.85'},g)}else{el('circle',{r:ball?11:16,fill,stroke:'white','stroke-width':2},g)}const t=el('text',{x:0,y:person?-19:4,'text-anchor':'middle',fill:person?'white':ball?'#111':'white','font-size':p.label.length>3?8:person?8:12,'font-weight':'bold','pointer-events':'none'},g);t.textContent=p.label} }
  $('scene-count').textContent=state.scenes.length;$('undo-btn').disabled=!history.length;$('redo-btn').disabled=!future.length;
 }
 function pos(e){const pt=svg.createSVGPoint();pt.x=e.clientX;pt.y=e.clientY;const m=svg.getScreenCTM();if(!m)return{x:0,y:0};const q=pt.matrixTransform(m.inverse());return{x:q.x,y:q.y}}
 function bounds(p){const [w,h]=state.view==='full-h'?[800,400]:state.view==='full-v'?[400,800]:[400,400];return{x:Math.max(-22,Math.min(w+22,p.x)),y:Math.max(-22,Math.min(h+22,p.y))}}
 function setMode(m){mode=m;['move','draw-red','draw-blue'].forEach(x=>$('mode-'+x).classList.toggle('active',x===m));svg.style.cursor=m==='move'?'default':'crosshair'}
 svg.addEventListener('pointerdown',e=>{if(playing||e.button!==0)return;const target=e.target.closest?.('.piece-group');const p=target&&state.players.find(x=>x.id===target.dataset.id);if(mode==='move'&&!p)return;checkpoint();const at=pos(e);active={id:e.pointerId,start:at,moved:false,player:mode==='move'?p:null,offset:p?{x:at.x-p.x,y:at.y-p.y}:null,points:mode==='move'?null:[at]};svg.setPointerCapture(e.pointerId);e.preventDefault()});
-svg.addEventListener('pointermove',e=>{if(!active||active.id!==e.pointerId)return;const at=pos(e);if(Math.hypot(at.x-active.start.x,at.y-active.start.y)>3)active.moved=true;if(active.player){const p=active.player,q=bounds({x:at.x-active.offset.x,y:at.y-active.offset.y});p.x=q.x;p.y=q.y;if(p.team==='df-node')p.bindTo=null;else state.players.filter(n=>n.team==='df-node'&&n.bindTo===p.id).forEach(n=>{n.x=p.x;n.y=p.y});render()}else{active.points.push(at);const color=mode==='draw-red'?'red':'blue';const d=active.points.map((q,i)=>`${i?'L':'M'} ${q.x.toFixed(1)} ${q.y.toFixed(1)}`).join(' ');const prev=draw.querySelector('[data-preview]');if(prev)prev.remove();el('path',{'data-preview':'1',d,fill:'none',stroke:color==='red'?'#ef4444':'#3b82f6','stroke-width':4,'stroke-linecap':'round'},draw)}e.preventDefault()});
-function endPointer(e,cancel=false){if(!active||active.id!==e.pointerId)return;const a=active;active=null;try{svg.releasePointerCapture(e.pointerId)}catch{}if(cancel){apply(history.pop());return}if(a.player){if(!a.moved&&a.player.team!=='ball'&&!['cone','marker','df-node'].includes(a.player.team)){history.pop();openModal(a.player.id);return}if(a.player.team==='df-node'){a.player.bindTo=null;for(const p of state.players){if(['A','B'].includes(p.team)&&Math.hypot(p.x-a.player.x,p.y-a.player.y)<25){a.player.bindTo=p.id;a.player.x=p.x;a.player.y=p.y;break}}}}else if(a.points.length>1){state.paths.push({d:a.points.map((q,i)=>`${i?'L':'M'} ${q.x.toFixed(1)} ${q.y.toFixed(1)}`).join(' '),color:mode==='draw-red'?'red':'blue',style:$('line-style').value})}else{history.pop();render();return}commit()}
+svg.addEventListener('pointermove',e=>{if(!active||active.id!==e.pointerId)return;const at=pos(e);if(Math.hypot(at.x-active.start.x,at.y-active.start.y)>3)active.moved=true;if(active.player){const p=active.player,q=bounds({x:at.x-active.offset.x,y:at.y-active.offset.y});p.x=q.x;p.y=q.y;if(p.team==='df-node'){const near=state.players.filter(x=>['A','B'].includes(x.team)).map(x=>({p:x,d:Math.hypot(x.x-p.x,x.y-p.y)})).sort((a,b)=>a.d-b.d)[0];if(near&&near.d<36){p.x=near.p.x;p.y=near.p.y;p.bindTo=near.p.id}else p.bindTo=null}else state.players.filter(n=>n.team==='df-node'&&n.bindTo===p.id).forEach(n=>{n.x=p.x;n.y=p.y});render()}else{active.points.push(at);const color=mode==='draw-red'?'red':'blue';const d=active.points.map((q,i)=>`${i?'L':'M'} ${q.x.toFixed(1)} ${q.y.toFixed(1)}`).join(' ');const prev=draw.querySelector('[data-preview]');if(prev)prev.remove();el('path',{'data-preview':'1',d,fill:'none',stroke:color==='red'?'#ef4444':'#3b82f6','stroke-width':4,'stroke-linecap':'round'},draw)}e.preventDefault()});
+function endPointer(e,cancel=false){if(!active||active.id!==e.pointerId)return;const a=active;active=null;try{svg.releasePointerCapture(e.pointerId)}catch{}if(cancel){apply(history.pop());return}if(a.player){if(!a.moved&&a.player.team!=='ball'&&!['cone','marker','df-node'].includes(a.player.team)){history.pop();openModal(a.player.id);return}if(a.player.team==='df-node'){const nearest=state.players.filter(p=>['A','B'].includes(p.team)).map(p=>({p,d:Math.hypot(p.x-a.player.x,p.y-a.player.y)})).sort((a,b)=>a.d-b.d)[0];if(nearest&&nearest.d<36){a.player.bindTo=nearest.p.id;a.player.x=nearest.p.x;a.player.y=nearest.p.y}}}else if(a.points.length>1){state.paths.push({d:a.points.map((q,i)=>`${i?'L':'M'} ${q.x.toFixed(1)} ${q.y.toFixed(1)}`).join(' '),color:mode==='draw-red'?'red':'blue',style:$('line-style').value})}else{history.pop();render();return}commit()}
 svg.addEventListener('pointerup',e=>endPointer(e));svg.addEventListener('pointercancel',e=>endPointer(e,true));
 function add(team){if(playing)return;checkpoint();const [x,y]=state.view==='full-h'?[400,200]:state.view==='full-v'?[200,400]:[200,200];const id=state.nextId++;if(team==='df-node'){const groupId='df_'+id;state.players.push({id:groupId+'_1',team,groupId,label:'',x:x-50,y},{id:groupId+'_2',team,groupId,label:'',x:x+50,y})}else state.players.push({id:'new_'+id,team,label:team==='A'||team==='B'?'+':'',x,y});commit()}
 function openModal(id){editingId=id;const p=state.players.find(x=>x.id===id);$('name-input').value=p?.label||'';$('name-modal').classList.remove('hidden');$('name-input').focus()}
@@ -250,7 +226,7 @@ function exportJSON(){download(new Blob([JSON.stringify({format:'ITS-HB-V2',...s
 function exportPNG(){const copy=svg.cloneNode(true);copy.setAttribute('xmlns',NS);copy.setAttribute('width',state.view==='full-h'?1200:800);copy.setAttribute('height',state.view==='full-v'?1600:state.view==='full-h'?645:880);const xml=new XMLSerializer().serializeToString(copy);const img=new Image(),url=URL.createObjectURL(new Blob([xml],{type:'image/svg+xml'}));img.onload=()=>{const c=document.createElement('canvas');c.width=img.width;c.height=img.height;const ctx=c.getContext('2d');ctx.drawImage(img,0,0);c.toBlob(b=>{if(b)download(b,'handball-tactics-v2.png');else alert('PNG出力に失敗しました')},'image/png');URL.revokeObjectURL(url)};img.onerror=()=>{URL.revokeObjectURL(url);alert('画像変換に失敗しました')};img.src=url}
 function template(kind){if(!kind||playing)return;checkpoint();const v=state.view,w=v==='full-h'?800:400,h=v==='full-v'?800:400;const defenders=state.players.filter(p=>p.team==='B'&&p.label!=='GK');const positions=kind==='6-0'?[[-.34,.22],[-.2,.27],[-.07,.29],[.07,.29],[.2,.27],[.34,.22]]:kind==='5-1'?[[-.34,.22],[-.17,.27],[0,.29],[.17,.27],[.34,.22],[0,.47]]:[[-.32,.2],[0,.25],[.32,.2],[-.18,.44],[.18,.44],[0,.60]];if(kind==='7attack'){const g=state.players.find(p=>p.team==='A'&&p.label==='GK');if(g){g.label='7th';g.x=w*.5;g.y=h*.55}}else defenders.forEach((p,i)=>{const [dx,dy]=positions[i%positions.length];if(v==='full-h'){p.x=w*.76+dx*140;p.y=h*.5+dy*200-50}else{p.x=w*.5+dx*280;p.y=h*.23+dy*180}});commit();$('template-select').value=''}
 function bind(id,fn){$(id).addEventListener('click',fn)}
-bind('undo-btn',undo);bind('redo-btn',redo);bind('mode-move',()=>setMode('move'));bind('mode-draw-red',()=>setMode('draw-red'));bind('mode-draw-blue',()=>setMode('draw-blue'));
+bind('tools-toggle',()=>{const panel=$('tools-panel');panel.hidden=!panel.hidden;$('tools-toggle').setAttribute('aria-expanded',String(!panel.hidden))});$('piece-style').addEventListener('change',()=>{try{localStorage.setItem('its_hb_piece_style',$('piece-style').value)}catch{}render()});try{$('piece-style').value=localStorage.getItem('its_hb_piece_style')||'person'}catch{};bind('undo-btn',undo);bind('redo-btn',redo);bind('mode-move',()=>setMode('move'));bind('mode-draw-red',()=>setMode('draw-red'));bind('mode-draw-blue',()=>setMode('draw-blue'));
 for(const [id,t] of [['add-a-btn','A'],['add-b-btn','B'],['add-cone-btn','cone'],['add-marker-btn','marker'],['add-df-line-btn','df-node']])bind(id,()=>add(t));
 bind('clear-lines-btn',()=>{if(playing)return;checkpoint();state.paths=[];state.players=state.players.filter(p=>p.team!=='df-node');commit()});
 bind('reset-btn',()=>{if(playing)return;if(!confirm('現在の配置・描画・シーンを初期化しますか？（自動保存も更新されます）'))return;checkpoint();state.players=defaults(state.view);state.paths=[];state.scenes=[];commit()});
